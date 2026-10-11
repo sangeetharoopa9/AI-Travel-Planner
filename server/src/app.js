@@ -21,25 +21,25 @@ const app = express();
 app.disable("x-powered-by");
 
 const allowedOrigins = [
-  process.env.CLIENT_URL,
   "https://roamwise-client.vercel.app",
   "http://localhost:5173",
-].filter(Boolean);
+];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests without an Origin header, such as server-to-server requests.
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    console.warn(`CORS blocked origin: ${origin}`);
+    console.error("Blocked CORS origin:", origin);
     return callback(new Error("Not allowed by CORS"));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 204,
 };
+
+app.use(cors(corsOptions));
 
 app.use(cors(corsOptions));
 
