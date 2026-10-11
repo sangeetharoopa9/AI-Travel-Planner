@@ -10,8 +10,15 @@ import {
     Sparkles,
 } from "lucide-react";
 import api from "../services/api";
-import { formatCurrency } from "../utils/currency";
 import "./TripDetails.css";
+
+function money(value) {
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+    }).format(Number(value) || 0);
+}
 
 function dateLabel(value) {
     return new Date(value).toLocaleDateString("en-IN", {
@@ -108,7 +115,7 @@ export default function TripDetails() {
                 <div>
                     <IndianRupee size={19} />
                     <span>Budget</span>
-                    <strong>{formatCurrency(trip.budget)}</strong>
+                    <strong>{money(trip.budget)}</strong>
                 </div>
                 <div>
                     <MapPin size={19} />
@@ -139,7 +146,7 @@ export default function TripDetails() {
                                         <p>{activity.description}</p>
                                         {activity.estimatedCost > 0 && (
                                             <span className="trip-details-cost">
-                                                Approx. {formatCurrency(activity.estimatedCost)}
+                                                Approx. {money(activity.estimatedCost)}
                                             </span>
                                         )}
                                     </div>

@@ -66,6 +66,10 @@ function formatDate(dateString) {
     );
 }
 
+function formatMoney(value) {
+    return formatCurrency(value);
+}
+
 export default function Planner() {
     const [searchParams] = useSearchParams();
 
@@ -238,6 +242,7 @@ export default function Planner() {
                 endDate: form.endDate,
                 travelers: Number(form.travelers),
                 budget: Number(form.budget),
+                currency: getPreferredCurrency(),
                 travelStyle: form.travelStyle,
                 interests: form.interests,
                 destinationCity: selectedDestination.city || "",
@@ -557,7 +562,7 @@ export default function Planner() {
                                                     )}
 
                                                     <strong>
-                                                        {formatCurrency(hotel.price)}{" "}
+                                                        {formatMoney(hotel.price)}{" "}
                                                         <small>/ night</small>
                                                     </strong>
                                                 </span>
@@ -731,7 +736,7 @@ export default function Planner() {
                         <div className="planner-summary-card">
                             <IndianRupee size={20} />
                             <span>Trip budget</span>
-                            <strong>{formatCurrency(trip.budget)}</strong>
+                            <strong>{formatMoney(trip.budget)}</strong>
                         </div>
 
                         <div className="planner-summary-card">
@@ -764,7 +769,7 @@ export default function Planner() {
                                 </p>
 
                                 <strong>
-                                    {formatCurrency(trip.hotel.pricePerNight)} / night
+                                    {formatMoney(trip.hotel.pricePerNight)} / night
                                 </strong>
 
                                 {trip.hotel.website && (
@@ -809,7 +814,7 @@ export default function Planner() {
                                                         {activity.estimatedCost > 0 && (
                                                             <span className="planner-activity-cost">
                                                                 Approx.{" "}
-                                                                {formatCurrency(activity.estimatedCost)}
+                                                                {formatMoney(activity.estimatedCost)}
                                                             </span>
                                                         )}
                                                     </div>

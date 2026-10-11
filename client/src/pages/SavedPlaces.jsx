@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
+import { formatCurrency } from "../utils/currency";
 import "./Explore.css";
 import "./SavedPlaces.css";
 
@@ -99,7 +100,7 @@ function SavedPlaceCard({ destination, removing, onRemove }) {
                     <div className="destination-price">
                         <span>From</span>
                         <strong>
-                            ${destination.price.toLocaleString("en-US")}
+                            {formatCurrency(destination.price)}
                         </strong>
                         <small>/ person</small>
                     </div>

@@ -12,7 +12,6 @@ import {
     RefreshCw,
 } from "lucide-react";
 import api from "../services/api";
-import { formatCurrency } from "../utils/currency";
 import "./MyTrips.css";
 
 function formatDate(dateString) {
@@ -21,6 +20,14 @@ function formatDate(dateString) {
         month: "short",
         year: "numeric",
     });
+}
+
+function formatMoney(amount) {
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+    }).format(Number(amount) || 0);
 }
 
 export default function MyTrips() {
@@ -185,7 +192,7 @@ export default function MyTrips() {
 
                                 <div className="my-trip-budget">
                                     <span>Planned budget</span>
-                                    <strong>{formatCurrency(trip.budget)}</strong>
+                                    <strong>{formatMoney(trip.budget)}</strong>
                                 </div>
 
                                 <Link

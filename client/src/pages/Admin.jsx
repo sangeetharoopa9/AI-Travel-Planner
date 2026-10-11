@@ -23,6 +23,7 @@ import {
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { formatCurrency } from "../utils/currency";
 import "./Admin.css";
 
 const CATALOG_TYPES = [
@@ -650,11 +651,7 @@ function Admin() {
                                             </td>
 
                                             <td>
-                                                {Number(item.price || 0).toLocaleString("en-IN", {
-                                                    style: "currency",
-                                                    currency: "USD",
-                                                    maximumFractionDigits: 0,
-                                                })}
+                                                {formatCurrency(item.price)}
                                             </td>
 
                                             <td>
@@ -967,7 +964,7 @@ function Admin() {
                                 </label>
 
                                 <label className="admin-form-field">
-                                    <span>Price (USD)</span>
+                                    <span>Price</span>
                                     <input
                                         type="number"
                                         name="price"
