@@ -16,6 +16,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import api from "../services/api";
+import { formatCurrency, getPreferredCurrency } from "../utils/currency";
 import "./Planner.css";
 
 const TRAVEL_STYLES = [
@@ -63,14 +64,6 @@ function formatDate(dateString) {
             year: "numeric",
         }
     );
-}
-
-function formatMoney(value) {
-    return new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-    }).format(Number(value) || 0);
 }
 
 export default function Planner() {
@@ -443,7 +436,7 @@ export default function Planner() {
 
                         <div className="planner-field">
                             <label htmlFor="trip-budget">
-                                Total budget (INR)
+                                Total budget ({getPreferredCurrency()})
                             </label>
 
                             <div className="planner-input-with-icon">
@@ -564,7 +557,7 @@ export default function Planner() {
                                                     )}
 
                                                     <strong>
-                                                        {formatMoney(hotel.price)}{" "}
+                                                        {formatCurrency(hotel.price)}{" "}
                                                         <small>/ night</small>
                                                     </strong>
                                                 </span>
@@ -738,7 +731,7 @@ export default function Planner() {
                         <div className="planner-summary-card">
                             <IndianRupee size={20} />
                             <span>Trip budget</span>
-                            <strong>{formatMoney(trip.budget)}</strong>
+                            <strong>{formatCurrency(trip.budget)}</strong>
                         </div>
 
                         <div className="planner-summary-card">
@@ -771,7 +764,7 @@ export default function Planner() {
                                 </p>
 
                                 <strong>
-                                    {formatMoney(trip.hotel.pricePerNight)} / night
+                                    {formatCurrency(trip.hotel.pricePerNight)} / night
                                 </strong>
 
                                 {trip.hotel.website && (
@@ -816,7 +809,7 @@ export default function Planner() {
                                                         {activity.estimatedCost > 0 && (
                                                             <span className="planner-activity-cost">
                                                                 Approx.{" "}
-                                                                {formatMoney(activity.estimatedCost)}
+                                                                {formatCurrency(activity.estimatedCost)}
                                                             </span>
                                                         )}
                                                     </div>
