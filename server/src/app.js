@@ -1,4 +1,3 @@
-
 import express from "express";
 import cors from "cors";
 
@@ -21,9 +20,12 @@ const app = express();
 app.disable("x-powered-by");
 
 const allowedOrigins = [
+  process.env.CLIENT_URL,
   "https://roamwise-client.vercel.app",
   "http://localhost:5173",
-];
+]
+  .filter(Boolean)
+  .map((origin) => origin.replace(/\/$/, ""));
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -39,7 +41,6 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions));
 
 app.use(cors(corsOptions));
 
