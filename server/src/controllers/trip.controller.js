@@ -40,6 +40,7 @@ export async function createTrip(req, res, next) {
             endDate,
             travelers,
             budget,
+            currency,
             travelStyle,
             interests,
             destinationCity,
@@ -241,7 +242,7 @@ export async function createTrip(req, res, next) {
             duration,
             travelers: parsedTravelers,
             budget: parsedBudget,
-            currency: "INR",
+            currency: ["INR", "USD", "EUR", "GBP"].includes(currency) ? currency : "INR",
             travelStyle: style,
             interests: cleanInterests,
         };

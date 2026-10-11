@@ -75,7 +75,7 @@ export async function updateSettings(req, res, next) {
             const nextPreferences = {
                 budget: current.budget || "moderate",
                 travelStyle: current.travelStyle || "mixed",
-                currency: current.currency || "USD",
+                currency: current.currency || "INR",
                 notifications: {
                     dealAlerts: current.notifications?.dealAlerts ?? true,
                     tripReminders: current.notifications?.tripReminders ?? true,

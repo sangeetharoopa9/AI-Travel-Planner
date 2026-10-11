@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema(
             currency: {
                 type: String,
                 enum: ["USD", "INR", "EUR", "GBP"],
-                default: "USD",
+                default: "INR",
             },
             notifications: {
                 dealAlerts: { type: Boolean, default: true },
