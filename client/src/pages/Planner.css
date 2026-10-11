@@ -1,0 +1,1044 @@
+.planner-page {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px clamp(18px, 3vw, 42px) 64px;
+  color: #192b25;
+  font-family: "DM Sans", sans-serif;
+}
+
+.planner-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 300px;
+  padding: clamp(28px, 4vw, 52px);
+  overflow: hidden;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #e8f4ec, #f3f6e9 56%, #d7eee1);
+}
+
+.planner-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 660px;
+}
+
+.planner-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #167a65;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.planner-hero h1 {
+  margin: 20px 0 16px;
+  color: #19382d;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(32px, 4vw, 50px);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -1.8px;
+}
+
+.planner-hero h1 span {
+  color: #16856d;
+}
+
+.planner-hero-content > p {
+  max-width: 550px;
+  margin: 0;
+  color: #62776b;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.planner-hero-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 23px;
+}
+
+.planner-hero-points span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #315d49;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.planner-hero-points svg {
+  color: #16856d;
+}
+
+.planner-hero-art {
+  position: relative;
+  display: grid;
+  flex: 0 0 260px;
+  place-items: center;
+  width: 260px;
+  height: 240px;
+  margin-left: 18px;
+}
+
+.planner-orbit {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgba(22, 122, 101, .17);
+  border-radius: 50%;
+}
+
+.planner-orbit-two {
+  width: 160px;
+  height: 160px;
+  border-style: dashed;
+}
+
+.planner-globe {
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  border: 1px solid rgba(22, 122, 101, .13);
+  border-radius: 50%;
+  color: #167a65;
+  background: rgba(255, 255, 255, .7);
+  box-shadow: 0 16px 45px rgba(34, 89, 68, .12);
+}
+
+.planner-float {
+  position: absolute;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 12px;
+  color: #315d49;
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 0 8px 22px rgba(34, 89, 68, .08);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.planner-float-one {
+  top: 20px;
+  right: 0;
+}
+
+.planner-float-two {
+  bottom: 19px;
+  left: 0;
+}
+
+.planner-builder {
+  margin-top: 34px;
+  padding: clamp(22px, 3.5vw, 38px);
+  border: 1px solid #e4ebe6;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 8px 35px rgba(24, 44, 36, .035);
+}
+
+.planner-section-heading,
+.planner-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.planner-section-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #16856d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+.planner-section-heading h2,
+.planner-result-header h2 {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(24px, 3vw, 31px);
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.planner-section-heading p,
+.planner-result-header p {
+  margin: 9px 0 0;
+  color: #7b8980;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.planner-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 13px;
+  border: 1px solid #dceee4;
+  border-radius: 10px;
+  color: #167a65;
+  background: #f4faf6;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.planner-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.planner-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.planner-field > label {
+  color: #2a4035;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.planner-input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 51px;
+  padding: 0 14px;
+  border: 1px solid #dfe8e2;
+  border-radius: 11px;
+  color: #7c8d83;
+  background: #fff;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.planner-input-with-icon:focus-within {
+  border-color: #16856d;
+  box-shadow: 0 0 0 3px rgba(22, 133, 109, .08);
+}
+
+.planner-input-with-icon input,
+.planner-input-with-icon select {
+  width: 100%;
+  min-width: 0;
+  height: 49px;
+  border: 0;
+  outline: 0;
+  color: #23372d;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+}
+
+.planner-input-with-icon input::placeholder {
+  color: #9ba79f;
+}
+
+.planner-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.planner-duration-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: -13px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  color: #167a65;
+  background: #eff8f2;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.planner-style-grid,
+.planner-interest-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.planner-style-option,
+.planner-interest {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid #e0e9e3;
+  border-radius: 10px;
+  color: #596d61;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+
+.planner-style-option:hover,
+.planner-interest:hover {
+  border-color: #90cbb5;
+}
+
+.planner-style-option.selected,
+.planner-interest.selected {
+  border-color: #16856d;
+  color: #12624f;
+  background: #eef8f2;
+}
+
+.planner-field-hint {
+  margin: -4px 0 0;
+  color: #839087;
+  font-size: 12px;
+}
+
+.planner-generate-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  min-height: 55px;
+  margin-top: 3px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  background: #167a65;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+
+.planner-generate-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #116653;
+}
+
+.planner-generate-button:disabled {
+  opacity: .7;
+  cursor: wait;
+}
+
+.planner-button-spinner {
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: planner-spin .8s linear infinite;
+}
+
+@keyframes planner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.planner-form-footnote {
+  margin: -12px 0 0;
+  color: #8a968f;
+  text-align: center;
+  font-size: 11px;
+}
+
+.planner-error {
+  margin-top: 20px;
+  padding: 13px 15px;
+  border: 1px solid #f3cccc;
+  border-radius: 10px;
+  color: #a12c2c;
+  background: #fff4f4;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.planner-destination-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px 0 18px;
+  color: #16856d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Hotel selection */
+
+.planner-hotels-section {
+  margin: 26px 0 30px;
+  padding: 24px;
+  border: 1px solid #dfeae3;
+  border-radius: 18px;
+  background: #fbfdfb;
+}
+
+.planner-hotels-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.planner-hotels-icon {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  color: #16856d;
+  background: #e7f4ec;
+}
+
+.planner-hotels-heading h3 {
+  margin: 0 0 5px;
+  color: #19382d;
+  font-family: "Manrope", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.planner-hotels-heading p,
+.planner-hotel-budget-note {
+  margin: 0;
+  color: #6c7f73;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.planner-hotel-budget-note {
+  margin: 14px 0 18px;
+}
+
+.planner-hotel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.planner-hotel-card {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 13px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e0e9e3;
+  border-radius: 14px;
+  text-align: left;
+  color: inherit;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .16s, box-shadow .16s, transform .16s;
+}
+
+.planner-hotel-card:hover {
+  transform: translateY(-2px);
+  border-color: #9bcbb2;
+}
+
+.planner-hotel-card.selected {
+  border-color: #16856d;
+  box-shadow: 0 0 0 2px rgba(22, 133, 109, .12);
+  background: #f4fbf6;
+}
+
+.planner-hotel-image-wrap {
+  position: relative;
+  display: block;
+  min-height: 125px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eaf2ec;
+}
+
+.planner-hotel-image-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 125px;
+  object-fit: cover;
+}
+
+.planner-hotel-image-placeholder {
+  display: grid;
+  min-height: 125px;
+  place-items: center;
+  color: #7ca28a;
+}
+
+.planner-hotel-radio {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border: 1px solid #d4e2d8;
+  border-radius: 50%;
+  color: #fff;
+  background: #fff;
+}
+
+.planner-hotel-radio.checked {
+  border-color: #16856d;
+  background: #16856d;
+}
+
+.planner-hotel-card-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 2px 3px 0;
+}
+
+.planner-hotel-name {
+  color: #1e3c2f;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.planner-hotel-location {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  color: #718277;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.planner-hotel-location svg {
+  flex: 0 0 auto;
+}
+
+.planner-hotel-meta {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.planner-hotel-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #b37a19;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.planner-hotel-meta strong {
+  color: #16856d;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.planner-hotel-meta small {
+  color: #718277;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.planner-hotel-amenities {
+  color: #718277;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.planner-hotels-state,
+.planner-hotels-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 12px;
+  color: #62776b;
+  background: #f0f6f1;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.planner-hotels-state-error {
+  color: #9a3e36;
+  background: #fff3f1;
+}
+
+.planner-hotels-empty svg {
+  flex: 0 0 auto;
+  color: #16856d;
+}
+
+.planner-hotels-empty strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #294b39;
+}
+
+.planner-hotels-empty p {
+  margin: 0;
+}
+
+.planner-hotel-selected-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 15px 0 0;
+  color: #16856d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Generated itinerary */
+
+.planner-results {
+  margin-top: 34px;
+  scroll-margin-top: 30px;
+}
+
+.planner-result-header {
+  align-items: flex-end;
+  margin-bottom: 22px;
+}
+
+.planner-print-button {
+  padding: 10px 15px;
+  border: 1px solid #dfe8e2;
+  border-radius: 9px;
+  color: #315d49;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.planner-print-button:hover {
+  border-color: #16856d;
+  color: #167a65;
+}
+
+.planner-demo-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid #f0e2bc;
+  border-radius: 11px;
+  color: #785c1d;
+  background: #fff9e9;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.planner-demo-note svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.planner-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 23px;
+}
+
+.planner-summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+  padding: 19px;
+  border: 1px solid #e4ebe6;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.planner-summary-card > svg {
+  color: #16856d;
+}
+
+.planner-summary-card > span {
+  color: #7c8981;
+  font-size: 11px;
+}
+
+.planner-summary-card > strong {
+  overflow-wrap: anywhere;
+  color: #20382d;
+  font-size: 16px;
+}
+
+.planner-result-hotel {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px solid #dce9df;
+  border-radius: 16px;
+  background: #f7fbf7;
+}
+
+.planner-result-hotel > img {
+  width: 120px;
+  height: 100px;
+  border-radius: 11px;
+  object-fit: cover;
+}
+
+.planner-result-hotel h3 {
+  margin: 6px 0;
+  color: #19382d;
+  font-size: 17px;
+}
+
+.planner-result-hotel p {
+  margin: 0 0 6px;
+  color: #6c7f73;
+  font-size: 12px;
+}
+
+.planner-result-hotel strong {
+  color: #16856d;
+  font-size: 13px;
+}
+
+.planner-result-hotel a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 12px;
+  color: #16856d;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.planner-itinerary {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.planner-day-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 19px;
+  padding: 25px;
+  border: 1px solid #e3ebe5;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.planner-day-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: start;
+  gap: 4px;
+  min-height: 66px;
+  border-radius: 12px;
+  color: #167a65;
+  background: #eaf6ef;
+}
+
+.planner-day-marker span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.planner-day-marker strong {
+  font-family: "Manrope", sans-serif;
+  font-size: 24px;
+}
+
+.planner-day-content h3 {
+  margin: 3px 0 20px;
+  color: #1d352a;
+  font-family: "Manrope", sans-serif;
+  font-size: 18px;
+}
+
+.planner-activities {
+  display: flex;
+  flex-direction: column;
+}
+
+.planner-activity {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 15px;
+  padding: 16px 0;
+  border-top: 1px solid #edf1ee;
+}
+
+.planner-activity-time {
+  padding-top: 2px;
+  color: #16856d;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.planner-activity-body h4 {
+  margin: 0 0 7px;
+  color: #293d33;
+  font-size: 13px;
+}
+
+.planner-activity-body p {
+  margin: 0;
+  color: #748178;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.planner-activity-cost {
+  display: inline-block;
+  margin-top: 9px;
+  color: #507360;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.planner-tips-card {
+  margin-top: 20px;
+  padding: 23px 25px;
+  border: 1px solid #dcebe1;
+  border-radius: 15px;
+  background: #f3f8f3;
+}
+
+.planner-tips-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #167a65;
+}
+
+.planner-tips-heading h3 {
+  margin: 0;
+  color: #1d352a;
+  font-size: 16px;
+}
+
+.planner-tips-card ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 17px 0 0;
+  padding-left: 20px;
+  color: #617469;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.planner-back-to-form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 23px auto 0;
+  padding: 10px;
+  border: 0;
+  color: #167a65;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 1050px) {
+  .planner-hero-art {
+    flex-basis: 190px;
+    transform: scale(.82);
+    transform-origin: center right;
+    margin-left: -10px;
+  }
+
+  .planner-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 850px) {
+  .planner-hotel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .planner-page {
+    padding: 17px 14px 40px;
+  }
+
+  .planner-hero {
+    min-height: auto;
+    padding: 27px 23px;
+    border-radius: 17px;
+  }
+
+  .planner-hero-art {
+    display: none;
+  }
+
+  .planner-hero h1 {
+    font-size: 34px;
+  }
+
+  .planner-hero-points {
+    gap: 10px 15px;
+  }
+
+  .planner-section-heading,
+  .planner-result-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .planner-step-badge {
+    white-space: normal;
+  }
+
+  .planner-builder {
+    margin-top: 20px;
+    padding: 22px 17px;
+    border-radius: 16px;
+  }
+
+  .planner-form-grid {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
+  .planner-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .planner-summary-card {
+    padding: 14px;
+  }
+
+  .planner-day-card {
+    grid-template-columns: 43px minmax(0, 1fr);
+    gap: 13px;
+    padding: 16px 12px;
+  }
+
+  .planner-day-marker {
+    min-height: 55px;
+  }
+
+  .planner-day-marker strong {
+    font-size: 20px;
+  }
+
+  .planner-day-content h3 {
+    font-size: 15px;
+  }
+
+  .planner-activity {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .planner-tips-card {
+    padding: 19px;
+  }
+
+  .planner-print-button {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 540px) {
+  .planner-hotels-section {
+    padding: 17px;
+  }
+
+  .planner-hotel-card {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .planner-hotel-image-wrap,
+  .planner-hotel-image-wrap img,
+  .planner-hotel-image-placeholder {
+    min-height: 112px;
+  }
+
+  .planner-result-hotel {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px;
+  }
+
+  .planner-result-hotel > img {
+    width: 88px;
+    height: 90px;
+  }
+
+  .planner-result-hotel a {
+    margin: 8px 0 0;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #planner-results,
+  #planner-results * {
+    visibility: visible;
+  }
+
+  #planner-results {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .planner-print-button,
+  .planner-back-to-form {
+    display: none !important;
+  }
+
+  .planner-day-card,
+  .planner-summary-card,
+  .planner-tips-card {
+    break-inside: avoid;
+  }
+}

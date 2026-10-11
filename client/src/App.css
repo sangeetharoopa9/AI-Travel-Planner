@@ -1,0 +1,60 @@
+.session-control {
+  position: fixed;
+  z-index: 1000;
+  top: 16px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px 7px 13px;
+  border: 1px solid #e0e8e3;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 4px 18px rgba(24, 44, 36, 0.08);
+}
+
+.session-control span {
+  max-width: 150px;
+  overflow: hidden;
+  color: #33443b;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-control button {
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: #167a65;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.session-control button:hover {
+  background: #116653;
+}
+
+.protected-placeholder {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 32px;
+  border: 1px solid #e4ebe6;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.protected-placeholder h1 {
+  margin: 0 0 12px;
+  color: #17211f;
+  font-size: 28px;
+}
+
+.protected-placeholder p {
+  color: #718078;
+  line-height: 1.7;
+}

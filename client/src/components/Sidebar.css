@@ -1,0 +1,275 @@
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  padding: 28px 17px 18px;
+  background: #fff;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: fit-content;
+  margin: 0 0 45px 8px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: #fff;
+  background: var(--primary);
+  border-radius: 13px;
+}
+
+.brand-name {
+  font-family: "Manrope", sans-serif;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -1.1px;
+}
+
+.brand-name span {
+  color: var(--primary);
+}
+
+.sidebar-label {
+  margin: 0 0 13px 12px;
+  color: #9ba39d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 45px;
+  padding: 0 12px;
+  color: #727d75;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.sidebar-link:hover {
+  color: var(--primary-dark);
+  background: #f4f8f4;
+}
+
+.sidebar-link.active {
+  color: var(--primary-dark);
+  background: #eaf4ed;
+}
+
+.sidebar-link.active::before {
+  position: absolute;
+  top: 11px;
+  bottom: 11px;
+  left: 0;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 0 4px 4px 0;
+  content: "";
+}
+
+.new-tag {
+  margin-left: auto;
+  padding: 3px 6px;
+  color: var(--primary);
+  background: #d9ecdf;
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.sidebar-promo {
+  margin: 34px 0 24px;
+  padding: 18px 15px;
+  background: linear-gradient(150deg, #f0f7f0, #f8f8ef);
+  border: 1px solid #e5eee4;
+  border-radius: 14px;
+}
+
+.promo-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--primary);
+  background: white;
+  border: 1px solid #e5eee4;
+  border-radius: 11px;
+}
+
+.sidebar-promo h3 {
+  margin: 15px 0 8px;
+  font-family: "Manrope", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sidebar-promo p {
+  margin: 0;
+  color: #78847a;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.promo-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 17px 2px 0;
+  border-top: 1px solid var(--border);
+}
+
+.footer-avatar {
+  display: grid;
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  color: #fff;
+  background: #cc9475;
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.footer-user {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.footer-user strong {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footer-user span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.footer-dots {
+  margin-left: auto;
+  color: #8b948d;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 1100px) {
+  .sidebar {
+    width: 220px;
+    padding-right: 13px;
+    padding-left: 13px;
+  }
+
+  .sidebar-promo {
+    padding: 14px 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    inset: auto 0 0;
+    flex-direction: row;
+    width: 100%;
+    height: 68px;
+    padding: 6px 7px;
+    border-top: 1px solid var(--border);
+    border-right: 0;
+    overflow: visible;
+  }
+
+  .brand,
+  .sidebar-section,
+  .sidebar-promo,
+  .sidebar-bottom {
+    display: none;
+  }
+
+  .sidebar::after {
+    display: none;
+  }
+
+  .sidebar:has(.sidebar-link) {
+    justify-content: center;
+  }
+
+  .sidebar .sidebar-nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+  }
+
+  .sidebar .sidebar-link {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    min-height: 55px;
+    padding: 4px 2px;
+    font-size: 9px;
+  }
+
+  .sidebar .sidebar-link span:not(.new-tag) {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar .sidebar-link.active::before {
+    top: 0;
+    right: 25%;
+    bottom: auto;
+    left: 25%;
+    width: 50%;
+    height: 2px;
+  }
+
+  .sidebar .new-tag {
+    display: none;
+  }
+}

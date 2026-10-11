@@ -1,0 +1,44 @@
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-main {
+  min-height: 100vh;
+  margin-left: 250px;
+}
+
+.page-content {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 30px 38px 48px;
+}
+
+@media (max-width: 1100px) {
+  .app-main {
+    margin-left: 220px;
+  }
+
+  .page-content {
+    padding: 26px 24px 40px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-main {
+    margin-left: 0;
+    padding-bottom: 76px;
+  }
+
+  .page-content {
+    padding: 22px 18px 32px;
+  }
+}
+
+@media (max-width: 420px) {
+  .page-content {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}

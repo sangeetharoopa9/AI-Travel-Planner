@@ -1,0 +1,569 @@
+
+/* ========================================
+   SAVED PLACES PAGE
+======================================== */
+
+.saved-places-page {
+  width: 100%;
+  min-height: 100%;
+  padding: 28px 32px 40px;
+  color: var(--text-primary, #202522);
+}
+
+/* ========================================
+   HERO SECTION
+======================================== */
+
+.saved-places-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 250px;
+  padding: 38px 44px;
+  overflow: hidden;
+  border: 1px solid #e7eee8;
+  border-radius: 22px;
+  background:
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(181, 218, 190, 0.42),
+      transparent 34%
+    ),
+    linear-gradient(120deg, #f0f7f0 0%, #f8faf6 55%, #e9f3e9 100%);
+}
+
+.saved-places-hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 650px;
+}
+
+.saved-places-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 15px;
+  color: #398052;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.saved-places-hero h1 {
+  margin: 0;
+  color: #202922;
+  font-size: clamp(34px, 4vw, 48px);
+  font-weight: 750;
+  letter-spacing: -1.8px;
+  line-height: 1.12;
+}
+
+.saved-places-hero h1 span {
+  color: #408457;
+}
+
+.saved-places-hero-copy > p {
+  max-width: 480px;
+  margin: 14px 0 23px;
+  color: #68746b;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.saved-places-explore-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #347849;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: gap 0.2s ease;
+}
+
+.saved-places-explore-link:hover {
+  gap: 12px;
+}
+
+.saved-places-hero-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 150px;
+  width: 150px;
+  height: 150px;
+  margin-right: 35px;
+  border: 1px solid rgba(71, 131, 86, 0.15);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.38);
+  color: rgba(59, 126, 76, 0.7);
+  transform: rotate(-10deg);
+}
+
+/* ========================================
+   CONTENT HEADER
+======================================== */
+
+.saved-places-content {
+  margin-top: 36px;
+}
+
+.saved-places-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 23px;
+}
+
+.saved-places-kicker {
+  color: #428258;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.saved-places-heading-row h2 {
+  margin: 8px 0 6px;
+  color: var(--text-primary, #202522);
+  font-size: clamp(21px, 2.5vw, 27px);
+  font-weight: 750;
+  letter-spacing: -0.7px;
+}
+
+.saved-places-heading-row p {
+  margin: 0;
+  color: #838a84;
+  font-size: 12px;
+}
+
+.saved-places-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 39px;
+  padding: 0 14px;
+  border: 1px solid #e1e7e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #4d5b50;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.saved-places-refresh:hover {
+  border-color: #b8d4bd;
+  background: #f5faf5;
+}
+
+.saved-places-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ========================================
+   SEARCH AND FILTERS
+======================================== */
+
+.saved-places-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.saved-places-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 340px);
+  min-height: 43px;
+  padding: 0 13px;
+  border: 1px solid #e3e8e3;
+  border-radius: 11px;
+  background: #fff;
+  color: #818b83;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.saved-places-search:focus-within {
+  border-color: #79b68a;
+  box-shadow: 0 0 0 3px rgba(80, 145, 95, 0.1);
+}
+
+.saved-places-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #27312a;
+  font: inherit;
+  font-size: 12px;
+}
+
+.saved-places-search input::placeholder {
+  color: #9aa19b;
+}
+
+.saved-places-categories {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.saved-places-categories button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #e5e9e5;
+  border-radius: 9px;
+  background: #fff;
+  color: #69736b;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saved-places-categories button:hover {
+  border-color: #b8d5bf;
+  color: #347849;
+}
+
+.saved-places-categories button.selected {
+  border-color: #3f8554;
+  background: #3f8554;
+  color: #fff;
+}
+
+/* ========================================
+   DESTINATION GRID
+======================================== */
+
+.saved-places-grid {
+  align-items: stretch;
+}
+
+.saved-place-card {
+  min-width: 0;
+  height: 100%;
+}
+
+.saved-place-card .destination-card-body {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 200px);
+}
+
+.saved-place-card .destination-description {
+  flex: 1;
+}
+
+.saved-place-card .destination-image-wrap {
+  position: relative;
+}
+
+.saved-place-card .save-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.saved-place-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 37px;
+  margin-top: 15px;
+  padding: 8px 12px;
+  border: 1px solid #f0dada;
+  border-radius: 9px;
+  background: #fff;
+  color: #b64d4d;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.saved-place-remove:hover:not(:disabled) {
+  border-color: #e7baba;
+  background: #fff6f6;
+}
+
+.saved-place-remove:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+/* ========================================
+   NOTIFICATIONS
+======================================== */
+
+.saved-places-message {
+  margin-bottom: 18px;
+  padding: 12px 15px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.saved-places-message.error {
+  border-color: #f0d0d0;
+  background: #fff5f5;
+  color: #a43f3f;
+}
+
+.saved-places-message.success {
+  border-color: #cce5d0;
+  background: #f1faf2;
+  color: #347849;
+}
+
+/* ========================================
+   EMPTY AND LOADING STATES
+======================================== */
+
+.saved-places-state,
+.saved-places-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  padding: 35px 20px;
+  border: 1px dashed #dce5dc;
+  border-radius: 18px;
+  background: #fbfcfa;
+  text-align: center;
+}
+
+.saved-places-state > svg {
+  margin-bottom: 14px;
+  color: #679776;
+}
+
+.saved-places-state h3,
+.saved-places-empty h3 {
+  margin: 0 0 8px;
+  color: #27312a;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.saved-places-state p,
+.saved-places-empty p {
+  max-width: 390px;
+  margin: 0;
+  color: #7d877e;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.saved-places-state > button {
+  margin-top: 18px;
+  padding: 10px 17px;
+  border: none;
+  border-radius: 9px;
+  background: #3f8554;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.saved-places-spinner {
+  width: 29px;
+  height: 29px;
+  margin-bottom: 18px;
+  border: 3px solid #dceadd;
+  border-top-color: #438655;
+  border-radius: 50%;
+  animation: saved-places-spin 0.8s linear infinite;
+}
+
+@keyframes saved-places-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.saved-places-empty {
+  min-height: 320px;
+  border-style: solid;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(217, 237, 218, 0.36),
+      transparent 55%
+    ),
+    #fbfcfa;
+}
+
+.saved-places-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 66px;
+  height: 66px;
+  margin-bottom: 19px;
+  border: 1px solid #dcebdd;
+  border-radius: 50%;
+  background: #eef7ef;
+  color: #4d8a5d;
+}
+
+.saved-places-empty h3 {
+  font-size: 20px;
+}
+
+.saved-places-empty p {
+  margin-bottom: 21px;
+}
+
+.saved-places-empty-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 17px;
+  border-radius: 10px;
+  background: #3f8554;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.saved-places-empty-link:hover {
+  background: #316d43;
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT
+======================================== */
+
+@media (max-width: 1100px) {
+  .saved-places-page {
+    padding: 24px;
+  }
+
+  .saved-places-hero {
+    padding: 32px;
+  }
+
+  .saved-places-hero-art {
+    margin-right: 0;
+  }
+
+  .saved-places-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saved-places-search {
+    width: 100%;
+  }
+
+  .saved-places-categories {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 650px) {
+  .saved-places-page {
+    padding: 16px 14px 28px;
+  }
+
+  .saved-places-hero {
+    min-height: auto;
+    padding: 27px 22px;
+    border-radius: 17px;
+  }
+
+  .saved-places-hero h1 {
+    font-size: 34px;
+    letter-spacing: -1.2px;
+  }
+
+  .saved-places-hero-copy > p {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .saved-places-hero-art {
+    display: none;
+  }
+
+  .saved-places-content {
+    margin-top: 28px;
+  }
+
+  .saved-places-heading-row {
+    align-items: flex-start;
+  }
+
+  .saved-places-heading-row h2 {
+    font-size: 21px;
+  }
+
+  .saved-places-refresh {
+    min-height: 35px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .saved-places-categories {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    padding-bottom: 5px;
+    overflow-x: auto;
+  }
+
+  .saved-places-categories button {
+    flex: 0 0 auto;
+  }
+
+  .saved-places-state,
+  .saved-places-empty {
+    min-height: 250px;
+    padding: 25px 16px;
+  }
+
+  .saved-place-card .destination-card-body {
+    height: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saved-places-spinner {
+    animation: none;
+  }
+
+  .saved-places-explore-link,
+  .saved-places-refresh,
+  .saved-places-categories button,
+  .saved-place-remove,
+  .saved-places-empty-link {
+    transition: none;
+  }
+}
