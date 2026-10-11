@@ -23,10 +23,12 @@ async function ensureDatabase() {
 }
 
 export default async function handler(req, res) {
-    // 1) CORS headers first, so even error responses carry them
     const origin = req.headers.origin;
+    
+    // 1) Set CORS headers dynamically based on the origin
     if (origin && allowedOrigins.includes(origin)) {
         res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Access-Control-Allow-Credentials", "true"); // CRITICAL: Added this missing header
         res.setHeader("Vary", "Origin");
         res.setHeader(
             "Access-Control-Allow-Methods",
@@ -34,17 +36,17 @@ export default async function handler(req, res) {
         );
         res.setHeader(
             "Access-Control-Allow-Headers",
-            "Content-Type, Authorization"
+            "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
         );
     }
 
-    // 2) Answer the browser preflight without touching the database
+    // 2) Handle the preflight OPTIONS request immediately
     if (req.method === "OPTIONS") {
-        res.statusCode = 204;
-        return res.end();
+        res.status(204).end();
+        return;
     }
 
-    // 3) Normal requests: connect to MongoDB, then hand over to Express
+    // 3) Connect DB and pass to Express
     try {
         await ensureDatabase();
         return app(req, res);
@@ -54,8 +56,7 @@ export default async function handler(req, res) {
             success: false,
             error: {
                 code: "SERVER_INITIALIZATION_FAILED",
-                message:
-                    "The API could not initialize. Check server environment variables and database connectivity.",
+                message: "The API could not initialize. Check server environment variables and database connectivity.",
             },
         });
     }
