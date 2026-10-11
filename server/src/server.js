@@ -1,42 +1,62 @@
-
-import "dotenv/config";
-import app from "./app.js";
 import mongoose from "mongoose";
-import { connectDB } from "./config/db.js";
+import app from "../src/app.js";
+import { connectDB } from "../src/config/db.js";
 
-import dns from "dns";
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
-const PORT = Number(process.env.PORT) || 5000;
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "https://roamwise-client.vercel.app",
+    "http://localhost:5173",
+]
+    .filter(Boolean)
+    .map((origin) => origin.replace(/\/$/, ""));
 
-async function startServer() {
-    try {
-        await connectDB();
+let connecting = null;
 
-        const server = app.listen(PORT, () => {
-            console.log(`Roamwise API running at http://localhost:${PORT}`);
-            console.log(`Health check: http://localhost:${PORT}/api/health`);
+async function ensureDatabase() {
+    if (mongoose.connection.readyState === 1) return;
+    if (!connecting) {
+        connecting = connectDB().finally(() => {
+            connecting = null;
         });
-
-        async function shutdown(signal) {
-            console.log(`${signal} received. Shutting down...`);
-
-            server.close(async () => {
-                try {
-                    await mongoose.disconnect();
-                    process.exit(0);
-                } catch (error) {
-                    console.error("Error while disconnecting MongoDB:", error);
-                    process.exit(1);
-                }
-            });
-        }
-
-        process.on("SIGINT", () => shutdown("SIGINT"));
-        process.on("SIGTERM", () => shutdown("SIGTERM"));
-    } catch (error) {
-        console.error("Failed to start Roamwise API:", error.message);
-        process.exit(1);
     }
+    await connecting;
 }
 
-startServer();
+export default async function handler(req, res) {
+    // 1) CORS headers first, so even error responses carry them
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+        res.setHeader("Vary", "Origin");
+        res.setHeader(
+            "Access-Control-Allow-Methods",
+            "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        );
+        res.setHeader(
+            "Access-Control-Allow-Headers",
+            "Content-Type, Authorization"
+        );
+    }
+
+    // 2) Answer the browser preflight without touching the database
+    if (req.method === "OPTIONS") {
+        res.statusCode = 204;
+        return res.end();
+    }
+
+    // 3) Normal requests: connect to MongoDB, then hand over to Express
+    try {
+        await ensureDatabase();
+        return app(req, res);
+    } catch (error) {
+        console.error("Roamwise API initialization failed:", error.message);
+        return res.status(500).json({
+            success: false,
+            error: {
+                code: "SERVER_INITIALIZATION_FAILED",
+                message:
+                    "The API could not initialize. Check server environment variables and database connectivity.",
+            },
+        });
+    }
+}
