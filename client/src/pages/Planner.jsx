@@ -107,53 +107,62 @@ export default function Planner() {
             ) + 1
             : 0;
 
+
     useEffect(() => {
-        const destination = form.destination.trim();
+        const destination = String(form.destination || "").trim();
 
         if (!destination) {
             setHotels([]);
-            setSelectedHotelId("");
             setHotelError("");
-            return undefined;
+            setHotelLoading(false);
+            setSelectedHotelId("");
+            return;
         }
 
         let cancelled = false;
-        setHotelLoading(true);
-        setHotelError("");
 
-        // Wait until the user pauses typing so we don't flood free public services.
-        const timer = setTimeout(() => {
-            api
-                .get("/catalog/hotels/search", { params: { destination } })
-                .then((response) => {
-                    if (cancelled) return;
-                    const items = response.data?.data?.hotels;
-                    const availableHotels = Array.isArray(items) ? items : [];
-                    setHotels(availableHotels);
-                    setSelectedHotelId((currentId) =>
-                        availableHotels.some((hotel) => String(hotel.placeId) === currentId)
-                            ? currentId
-                            : ""
-                    );
-                })
-                .catch((requestError) => {
-                    if (cancelled) return;
-                    setHotels([]);
-                    setHotelError(
-                        requestError.response?.data?.message ||
-                        "We couldn't load hotels for this destination. Please try again."
-                    );
-                })
-                .finally(() => {
-                    if (!cancelled) setHotelLoading(false);
+        const timer = setTimeout(async () => {
+            setHotelLoading(true);
+            setHotelError("");
+
+            try {
+                const response = await api.get("/catalog/hotels/search", {
+                    params: { destination },
+                    timeout: 30000,
                 });
-        }, 1100);
+
+                if (cancelled) return;
+
+                const availableHotels = response.data?.data?.hotels || [];
+
+                setHotels(availableHotels);
+
+                setSelectedHotelId((currentId) =>
+                    availableHotels.some(
+                        (hotel) => String(hotel.placeId) === currentId
+                    )
+                        ? currentId
+                        : ""
+                );
+            } catch (error) {
+                if (cancelled) return;
+
+                setHotels([]);
+                setHotelError(
+                    error.response?.data?.message ||
+                    "Hotel search is temporarily unavailable. Please try again."
+                );
+            } finally {
+                if (!cancelled) setHotelLoading(false);
+            }
+        }, 800);
 
         return () => {
             cancelled = true;
             clearTimeout(timer);
         };
     }, [form.destination]);
+
 
     function updateField(event) {
         const { name, value } = event.target;
@@ -437,7 +446,7 @@ export default function Planner() {
                                     onChange={updateField}
                                     required
                                 />
-                                
+
                             </div>
                         </div>
                     </div>
@@ -622,8 +631,8 @@ export default function Planner() {
                                     key={interest}
                                     type="button"
                                     className={`planner-interest ${form.interests.includes(interest)
-                                            ? "selected"
-                                            : ""
+                                        ? "selected"
+                                        : ""
                                         }`}
                                     onClick={() => toggleInterest(interest)}
                                     aria-pressed={form.interests.includes(interest)}
