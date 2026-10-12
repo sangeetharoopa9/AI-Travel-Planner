@@ -11,6 +11,9 @@ import {
   ShieldCheck,
   Sparkles,
   Ticket,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import "./Sidebar.css";
@@ -23,13 +26,14 @@ const navigation = [
   { label: "Maps & Weather", path: "/maps-weather", icon: CloudSun },
 ];
 
-function Sidebar() {
+function Sidebar({ collapsed = false, mobileOpen = false, onNavigate = () => {} }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
   return (
-    <aside className="sidebar">
-      <NavLink to="/" className="brand">
+    <aside className={`sidebar ${collapsed ? "is-collapsed" : ""} ${mobileOpen ? "is-mobile-open" : ""}`} aria-label="Main navigation">
+      <button type="button" className="sidebar-mobile-close" onClick={onNavigate} aria-label="Close menu"><X size={20} /></button>
+      <NavLink to="/" className="brand" onClick={onNavigate} title="Roamwise">
         <span className="brand-mark">
           <Globe2 size={23} strokeWidth={2.2} />
         </span>
@@ -47,6 +51,8 @@ function Sidebar() {
             <NavLink
               key={label}
               to={path}
+              onClick={onNavigate}
+              title={collapsed ? label : undefined}
               className={({ isActive }) =>
                 `sidebar-link ${isActive ? "active" : ""}`
               }
@@ -64,6 +70,8 @@ function Sidebar() {
             <>
               <NavLink
                 to="/admin"
+                onClick={onNavigate}
+                title={collapsed ? "Admin Panel" : undefined}
                 end
                 className={({ isActive }) =>
                   `sidebar-link ${isActive ? "active" : ""}`
@@ -75,6 +83,8 @@ function Sidebar() {
 
               <NavLink
                 to="/admin/deals"
+                onClick={onNavigate}
+                title={collapsed ? "Deal Management" : undefined}
                 className={({ isActive }) =>
                   `sidebar-link ${isActive ? "active" : ""}`
                 }
@@ -98,7 +108,7 @@ function Sidebar() {
           Let AI turn your travel dreams into a thoughtful itinerary.
         </p>
 
-        <NavLink to="/planner" className="promo-link">
+        <NavLink to="/planner" className="promo-link" onClick={onNavigate}>
           Plan a trip <span>↗</span>
         </NavLink>
       </div>
@@ -106,6 +116,8 @@ function Sidebar() {
       <div className="sidebar-bottom">
         <NavLink
           to="/deals"
+          onClick={onNavigate}
+          title={collapsed ? "Travel Deals" : undefined}
           className={({ isActive }) =>
             `sidebar-link ${isActive ? "active" : ""}`
           }
@@ -116,6 +128,8 @@ function Sidebar() {
 
         <NavLink
           to="/settings"
+          onClick={onNavigate}
+          title={collapsed ? "Settings" : undefined}
           className={({ isActive }) =>
             `sidebar-link ${isActive ? "active" : ""}`
           }
