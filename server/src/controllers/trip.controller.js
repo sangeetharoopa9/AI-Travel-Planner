@@ -46,6 +46,7 @@ export async function createTrip(req, res, next) {
             destinationCity,
             destinationCountry,
             hotelId,
+            hotel: submittedHotel,
         } = req.body;
 
         if (
@@ -151,60 +152,40 @@ export async function createTrip(req, res, next) {
 
         let selectedHotel = null;
 
-        if (hotelId) {
-            if (!mongoose.isValidObjectId(hotelId)) {
+        // OpenStreetMap results are community-sourced listings; save only the selected
+        // listing snapshot and its OSM identifier. No price, rating, or availability is invented.
+        if (submittedHotel && typeof submittedHotel === "object") {
+            const placeId = String(submittedHotel.placeId || "").trim();
+            const hotelName = String(submittedHotel.name || "").trim();
+            if (!/^osm-(node|way|relation)-\d+$/.test(placeId) || !hotelName || hotelName.length > 150) {
                 return res.status(400).json({
                     success: false,
                     message: "The selected hotel is invalid. Please choose it again.",
                 });
             }
-
-            const nights = Math.max(duration - 1, 1);
-            const maxNightlyPrice = Math.floor(
-                (parsedBudget * 0.35) / nights
-            );
-
-            const locationTerms = [
-                ...new Set([cleanCity, destination.trim()].filter(Boolean)),
-            ];
-
-            const locationRegexes = locationTerms.map(
-                (term) => new RegExp(`^${escapeRegex(term)}$`, "i")
-            );
-
-            const hotelQuery = {
-                _id: hotelId,
-                type: "hotel",
-                isActive: true,
-                price: {
-                    $gt: 0,
-                    $lte: maxNightlyPrice,
-                },
-                $or: [
-                    { city: { $in: locationRegexes } },
-                    { name: { $in: locationRegexes } },
-                ],
+            selectedHotel = {
+                catalogId: null,
+                placeId: placeId.slice(0, 200),
+                name: hotelName.slice(0, 150),
+                city: String(submittedHotel.city || cleanCity || destination).slice(0, 100),
+                country: String(submittedHotel.country || cleanCountry || "").slice(0, 100),
+                pricePerNight: 0,
+                rating: 0,
+                image: String(submittedHotel.image || "").slice(0, 2000),
+                address: String(submittedHotel.address || "").slice(0, 300),
+                website: String(submittedHotel.website || "").slice(0, 2000),
+                mapsUri: String(submittedHotel.mapsUri || "").slice(0, 2000),
+                amenities: [],
             };
-
-            if (cleanCountry) {
-                hotelQuery.country = new RegExp(
-                    `^${escapeRegex(cleanCountry)}$`,
-                    "i"
-                );
+        } else if (hotelId) {
+            // Backward compatibility for trips created using catalog hotel records.
+            if (!mongoose.isValidObjectId(hotelId)) {
+                return res.status(400).json({ success: false, message: "The selected hotel is invalid. Please choose it again." });
             }
-
-            const hotelRecord = await CatalogItem.findOne(
-                hotelQuery
-            ).lean();
-
+            const hotelRecord = await CatalogItem.findOne({ _id: hotelId, type: "hotel", isActive: true }).lean();
             if (!hotelRecord) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "The selected hotel is no longer available for this destination or budget. Please select another hotel.",
-                });
+                return res.status(400).json({ success: false, message: "The selected hotel is no longer available. Please choose another hotel." });
             }
-
             selectedHotel = {
                 catalogId: hotelRecord._id,
                 name: hotelRecord.name,
@@ -215,9 +196,8 @@ export async function createTrip(req, res, next) {
                 image: hotelRecord.image || "",
                 address: hotelRecord.address || "",
                 website: hotelRecord.website || "",
-                amenities: Array.isArray(hotelRecord.amenities)
-                    ? hotelRecord.amenities
-                    : [],
+                mapsUri: hotelRecord.mapsUri || "",
+                amenities: Array.isArray(hotelRecord.amenities) ? hotelRecord.amenities : [],
             };
         }
 
