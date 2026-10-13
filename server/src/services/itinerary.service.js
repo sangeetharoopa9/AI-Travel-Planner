@@ -8,349 +8,397 @@ const ALLOWED_STYLES = [
     "Balanced",
 ];
 
-function buildFallbackItinerary(trip) {
-    const activitiesByStyle = {
-        Relaxation: [
-            [
-                "9:00 AM",
-                "Slow morning",
-                "Enjoy breakfast and explore a nearby neighborhood.",
-            ],
-            [
-                "11:00 AM",
-                "Scenic stop",
-                "Visit a peaceful viewpoint or garden.",
-            ],
-            [
-                "1:00 PM",
-                "Local lunch",
-                "Try a well-reviewed local restaurant.",
-            ],
-            [
-                "3:00 PM",
-                "Free time",
-                "Enjoy a relaxed afternoon at your own pace.",
-            ],
-            [
-                "6:00 PM",
-                "Evening walk",
-                "Discover the area during sunset.",
-            ],
-        ],
-        Adventure: [
-            [
-                "7:30 AM",
-                "Early start",
-                "Have breakfast and prepare for an outdoor excursion.",
-            ],
-            [
-                "9:00 AM",
-                "Outdoor adventure",
-                "Explore a suitable hiking trail or outdoor activity.",
-            ],
-            [
-                "12:30 PM",
-                "Refuel",
-                "Take a break for lunch and hydration.",
-            ],
-            [
-                "2:00 PM",
-                "Explore further",
-                "Visit a nearby nature attraction.",
-            ],
-            [
-                "6:00 PM",
-                "Wind down",
-                "Rest and enjoy a casual dinner.",
-            ],
-        ],
-        Culture: [
-            [
-                "9:00 AM",
-                "Historic district",
-                "Walk through a historic area and discover local architecture.",
-            ],
-            [
-                "11:00 AM",
-                "Museum or landmark",
-                "Explore a local museum or cultural attraction.",
-            ],
-            [
-                "1:00 PM",
-                "Regional cuisine",
-                "Sample traditional dishes.",
-            ],
-            [
-                "3:00 PM",
-                "Art and craft",
-                "Visit local galleries, markets, or craft shops.",
-            ],
-            [
-                "6:00 PM",
-                "Local evening",
-                "Experience the destination's evening atmosphere.",
-            ],
-        ],
-        Food: [
-            [
-                "9:00 AM",
-                "Local breakfast",
-                "Start with a regional breakfast specialty.",
-            ],
-            [
-                "11:00 AM",
-                "Market visit",
-                "Explore a local food market.",
-            ],
-            [
-                "1:00 PM",
-                "Food experience",
-                "Enjoy a destination-specific lunch.",
-            ],
-            [
-                "3:30 PM",
-                "Cafe stop",
-                "Try a popular local dessert or coffee.",
-            ],
-            [
-                "6:30 PM",
-                "Dinner discovery",
-                "Choose a local restaurant for dinner.",
-            ],
-        ],
-        Nature: [
-            [
-                "7:30 AM",
-                "Nature walk",
-                "Enjoy the outdoors during the cooler morning hours.",
-            ],
-            [
-                "10:00 AM",
-                "Scenic attraction",
-                "Visit a nearby natural landmark.",
-            ],
-            [
-                "12:30 PM",
-                "Lunch break",
-                "Have lunch and take time to rest.",
-            ],
-            [
-                "2:30 PM",
-                "Outdoor discovery",
-                "Explore a garden, lake, trail, or nature reserve.",
-            ],
-            [
-                "5:30 PM",
-                "Sunset views",
-                "Find a safe scenic spot for sunset.",
-            ],
-        ],
-        Luxury: [
-            [
-                "9:00 AM",
-                "Leisurely breakfast",
-                "Enjoy a relaxed breakfast.",
-            ],
-            [
-                "11:00 AM",
-                "Private discovery",
-                "Explore a landmark or book a guided experience.",
-            ],
-            [
-                "1:00 PM",
-                "Destination dining",
-                "Enjoy a memorable lunch within your budget.",
-            ],
-            [
-                "3:30 PM",
-                "Leisure time",
-                "Relax at your accommodation or a local wellness venue.",
-            ],
-            [
-                "7:00 PM",
-                "Evening dining",
-                "Plan a special dinner.",
-            ],
-        ],
-        Balanced: [
-            [
-                "9:00 AM",
-                "Local breakfast",
-                "Start the day with a relaxed breakfast.",
-            ],
-            [
-                "10:30 AM",
-                "Must-see attraction",
-                "Visit one of the destination's main attractions.",
-            ],
-            [
-                "1:00 PM",
-                "Local lunch",
-                "Try regional food.",
-            ],
-            [
-                "2:30 PM",
-                "Explore the area",
-                "Discover a neighborhood, market, or cultural site.",
-            ],
-            [
-                "6:00 PM",
-                "Evening experience",
-                "Enjoy a scenic walk and dinner.",
-            ],
-        ],
-    };
+const DEFAULT_GEMINI_MODEL =
+    process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
-    const baseActivities =
-        activitiesByStyle[trip.travelStyle] ||
-        activitiesByStyle.Balanced;
+const DEFAULT_GROQ_MODEL =
+    process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 
-    return Array.from({ length: trip.duration }, (_, index) => ({
-        day: index + 1,
-        title:
-            index === 0
-                ? `Arrival and first discoveries in ${trip.destination}`
-                : index === trip.duration - 1
-                    ? `Final discoveries in ${trip.destination}`
-                    : `Explore ${trip.destination}`,
-        activities: baseActivities.map(
-            ([time, title, description], activityIndex) => ({
-                time,
-                title,
-                description:
-                    index > 0 && activityIndex === 1
-                        ? `Discover a different attraction in ${trip.destination}. ${description}`
-                        : description,
-                estimatedCost: Math.round(
-                    trip.budget /
-                    trip.duration /
-                    trip.travelers /
-                    baseActivities.length
-                ),
-            })
-        ),
-    }));
+const REQUEST_TIMEOUT_MS = 90000;
+const MAX_RETRIES = 2;
+
+const DEFAULT_TIPS = [
+    "Confirm attraction opening hours and entry requirements before visiting.",
+    "Keep some flexibility for weather, traffic, and local events.",
+    "Treat cost estimates as planning guidance, not confirmed prices.",
+    "Keep essential documents and emergency contact details accessible.",
+    "Reserve part of your budget for unexpected expenses.",
+];
+
+// Helpers
+
+function asString(value, fallback = "") {
+    if (value === null || value === undefined) {
+        return fallback;
+    }
+    return String(value).trim() || fallback;
 }
 
+function asNumber(value, fallback = 0) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
+}
+
+function getDestination(trip) {
+    return asString(trip?.destination, "your destination");
+}
+
+function getDuration(trip) {
+    const duration = Math.floor(asNumber(trip?.duration, 1));
+    return Math.min(30, Math.max(1, duration));
+}
+
+function getTravelers(trip) {
+    return Math.max(1, Math.floor(asNumber(trip?.travelers, 1)));
+}
+
+function getBudget(trip) {
+    return Math.max(0, asNumber(trip?.budget, 0));
+}
+
+function getCurrency(trip) {
+    return asString(trip?.currency, "INR");
+}
+
+function getTravelStyle(trip) {
+    return ALLOWED_STYLES.includes(trip?.travelStyle)
+        ? trip.travelStyle
+        : "Balanced";
+}
+
+function getInterests(trip) {
+    return Array.isArray(trip?.interests)
+        ? trip.interests
+            .filter((interest) => typeof interest === "string")
+            .slice(0, 8)
+        : [];
+}
+
+function getErrorMessage(error) {
+    return error instanceof Error
+        ? error.message
+        : String(error || "Unknown error");
+}
+
+function isRetryableStatus(status) {
+    return (
+        status === 408 ||
+        status === 425 ||
+        status === 429 ||
+        status === 500 ||
+        status === 502 ||
+        status === 503 ||
+        status === 504
+    );
+}
+
+function sleep(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function getRetryDelay(attempt, retryAfter) {
+    if (retryAfter) {
+        const seconds = Number(retryAfter);
+
+        if (Number.isFinite(seconds) && seconds >= 0) {
+            return Math.min(seconds * 1000, 15000);
+        }
+
+        const retryDate = Date.parse(retryAfter);
+
+        if (Number.isFinite(retryDate)) {
+            return Math.min(
+                Math.max(0, retryDate - Date.now()),
+                15000
+            );
+        }
+    }
+
+    // Exponential backoff with a small amount of jitter.
+    const baseDelay = Math.min(1000 * 2 ** attempt, 8000);
+    const jitter = Math.floor(Math.random() * 400);
+
+    return baseDelay + jitter;
+}
+
+// JSON parsing
+
+function extractJsonText(rawText) {
+    if (typeof rawText !== "string" || !rawText.trim()) {
+        throw new Error("The AI returned an empty response.");
+    }
+
+    let text = rawText.trim();
+
+    // Remove common Markdown code fences.
+    text = text
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+
+    // First, try parsing the response exactly as returned.
+    try {
+        JSON.parse(text);
+        return text;
+    } catch {
+        // Continue with extraction if the model added extra text.
+    }
+
+    // Find the first JSON object in the response.
+    const firstBrace = text.indexOf("{");
+
+    if (firstBrace === -1) {
+        throw new Error("The AI response did not contain a JSON object.");
+    }
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let index = firstBrace; index < text.length; index += 1) {
+        const character = text[index];
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (character === "\\") {
+                escaped = true;
+            } else if (character === '"') {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (character === '"') {
+            inString = true;
+        } else if (character === "{") {
+            depth += 1;
+        } else if (character === "}") {
+            depth -= 1;
+
+            if (depth === 0) {
+                const candidate = text.slice(firstBrace, index + 1);
+                JSON.parse(candidate);
+                return candidate;
+            }
+        }
+    }
+
+    throw new Error("The AI returned incomplete or invalid JSON.");
+}
+
+function parseJsonResponse(rawText) {
+    const jsonText = extractJsonText(rawText);
+    const parsed = JSON.parse(jsonText);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("The AI response must be a JSON object.");
+    }
+
+    return parsed;
+}
+
+// Itinerary validation and normalization
+
 function cleanItinerary(data, trip) {
-    if (
-        !data ||
-        !Array.isArray(data.itinerary) ||
-        data.itinerary.length === 0
-    ) {
+    const duration = getDuration(trip);
+    const destination = getDestination(trip);
+    const budget = getBudget(trip);
+
+    if (!data || !Array.isArray(data.itinerary)) {
         throw new Error("The AI returned an invalid itinerary.");
     }
 
+    if (data.itinerary.length === 0) {
+        throw new Error("The AI returned an empty itinerary.");
+    }
+
     const itinerary = data.itinerary
-        .slice(0, trip.duration)
+        .slice(0, duration)
         .map((day, index) => {
-            if (!Array.isArray(day.activities)) {
-                throw new Error("The AI returned invalid daily activities.");
+            if (!day || typeof day !== "object") {
+                throw new Error(
+                    `The AI returned invalid information for day ${index + 1}.`
+                );
+            }
+
+            const rawActivities = Array.isArray(day.activities)
+                ? day.activities
+                : [];
+
+            const activities = rawActivities
+                .filter(
+                    (activity) =>
+                        activity &&
+                        typeof activity === "object" &&
+                        !Array.isArray(activity)
+                )
+                .slice(0, 8)
+                .map((activity) => ({
+                    time: asString(activity.time, "Flexible").slice(0, 40),
+                    title: asString(activity.title, "Explore").slice(0, 120),
+                    description: asString(
+                        activity.description,
+                        `Explore an attraction in ${destination}.`
+                    ).slice(0, 600),
+                    estimatedCost: Math.max(
+                        0,
+                        asNumber(activity.estimatedCost, 0)
+                    ),
+                }));
+
+            if (activities.length === 0) {
+                activities.push({
+                    time: "10:00 AM",
+                    title: "Discover the destination",
+                    description: `Explore a local attraction in ${destination}. Confirm local details before visiting.`,
+                    estimatedCost: 0,
+                });
             }
 
             return {
                 day: index + 1,
-                title: String(
-                    day.title || `Explore ${trip.destination}`
+                title: asString(
+                    day.title,
+                    `Explore ${destination} - Day ${index + 1}`
                 ).slice(0, 160),
-                activities: day.activities.slice(0, 8).map((activity) => ({
-                    time: String(activity.time || "Flexible").slice(0, 40),
-                    title: String(activity.title || "Explore").slice(0, 120),
-                    description: String(activity.description || "").slice(
-                        0,
-                        600
-                    ),
-                    estimatedCost: Math.max(
-                        0,
-                        Number(activity.estimatedCost) || 0
-                    ),
-                })),
+                activities,
             };
         });
 
-    while (itinerary.length < trip.duration) {
+    // Ensure every requested day exists if the provider returns fewer days.
+    while (itinerary.length < duration) {
         const dayNumber = itinerary.length + 1;
 
         itinerary.push({
             day: dayNumber,
-            title: `Explore ${trip.destination}`,
+            title: `Explore ${destination} - Day ${dayNumber}`,
             activities: [
                 {
                     time: "10:00 AM",
                     title: "Discover the destination",
-                    description: `Explore a local attraction in ${trip.destination}.`,
+                    description: `Explore a local attraction in ${destination}. Confirm opening hours and travel details before visiting.`,
+                    estimatedCost: 0,
+                },
+                {
+                    time: "1:00 PM",
+                    title: "Local meal",
+                    description: "Enjoy a meal that fits your budget.",
+                    estimatedCost: 0,
+                },
+                {
+                    time: "3:00 PM",
+                    title: "Flexible exploration",
+                    description: "Explore the surrounding area or allow time for rest.",
                     estimatedCost: 0,
                 },
             ],
         });
     }
 
+    const tips = Array.isArray(data.tips)
+        ? data.tips
+            .filter(
+                (tip) =>
+                    typeof tip === "string" ||
+                    typeof tip === "number"
+            )
+            .map((tip) => String(tip).trim())
+            .filter(Boolean)
+            .slice(0, 10)
+            .map((tip) => tip.slice(0, 300))
+        : [];
+
     return {
         itinerary,
         estimatedBudget: Math.max(
             0,
-            Number(data.estimatedBudget) || trip.budget
+            asNumber(data.estimatedBudget, budget)
         ),
-        tips: Array.isArray(data.tips)
-            ? data.tips
-                .slice(0, 10)
-                .map((tip) => String(tip).slice(0, 300))
-            : [],
+        tips: tips.length > 0 ? tips : [...DEFAULT_TIPS],
     };
 }
 
-export async function generateItinerary(trip) {
-    const apiKey = process.env.GEMINI_API_KEY;
+// Prompt generation
 
-    if (!apiKey) {
-        return {
-            ...cleanItinerary(
-                {
-                    itinerary: buildFallbackItinerary(trip),
-                    estimatedBudget: trip.budget,
-                    tips: [
-                        "Confirm opening hours and entry requirements before visiting.",
-                        "Keep some flexibility for weather and local events.",
-                        "Treat cost estimates as planning guidance, not confirmed prices.",
-                    ],
-                },
-                trip
+function buildItineraryPrompt(trip) {
+    const destination = getDestination(trip);
+    const duration = getDuration(trip);
+    const travelers = getTravelers(trip);
+    const budget = getBudget(trip);
+    const currency = getCurrency(trip);
+    const style = getTravelStyle(trip);
+    const interests = getInterests(trip);
+
+    const selectedHotel = trip?.hotel
+        ? {
+            name: asString(trip.hotel.name, "Selected hotel"),
+            city: asString(
+                trip.hotel.city,
+                trip.destinationCity || destination
             ),
-            aiGenerated: false,
-        };
-    }
-
-    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-
-    const prompt = `
-Create a practical travel itinerary in JSON for this trip:
-
-Destination: ${trip.destination}
-Start date: ${trip.startDate}
-End date: ${trip.endDate}
-Duration: ${trip.duration} days
-Travelers: ${trip.travelers}
-Total budget: ${trip.budget} ${trip.currency}
-Travel style: ${trip.travelStyle}
-Interests: ${trip.interests.join(", ") || "General sightseeing"}
-Destination city: ${trip.destinationCity || trip.destination}
-Destination country: ${trip.destinationCountry || "Not specified"}
-
-Selected hotel: ${trip.hotel
-            ? `${trip.hotel.name}, ${trip.hotel.city || trip.destination}, ${trip.hotel.country || ""}`
-            : "No hotel selected"
+            country: asString(
+                trip.hotel.country,
+                trip.destinationCountry || ""
+            ),
+            pricePerNight: Math.max(
+                0,
+                asNumber(trip.hotel.pricePerNight, 0)
+            ),
         }
+        : null;
 
-Hotel price per night: ${trip.hotel
-            ? trip.hotel.pricePerNight
-            : "Not applicable"
-        } ${trip.currency}
+    const hotelDescription = selectedHotel
+        ? `${selectedHotel.name}, ${selectedHotel.city}, ${selectedHotel.country}`
+        : "No hotel selected";
 
-Accommodation allowance is approximately 35% of the total trip budget.
-The selected hotel's price is already part of that allowance; do not
-add a different hotel.
+    const hotelPrice = selectedHotel
+        ? `${selectedHotel.pricePerNight} ${currency} per night, if applicable`
+        : "Not applicable";
 
-Return ONLY a JSON object with this structure:
+    return `
+You are a practical travel itinerary planner.
+
+Create a useful travel itinerary using the trip details below.
+
+TRIP DETAILS
+Destination: ${destination}
+Destination city: ${asString(trip?.destinationCity, destination)}
+Destination country: ${asString(trip?.destinationCountry, "Not specified")}
+Start date: ${asString(trip?.startDate, "Not specified")}
+End date: ${asString(trip?.endDate, "Not specified")}
+Duration: ${duration} days
+Travelers: ${travelers}
+Total trip budget: ${budget} ${currency}
+Travel style: ${style}
+Interests: ${interests.length ? interests.join(", ") : "General sightseeing"}
+Selected hotel: ${hotelDescription}
+Selected hotel price: ${hotelPrice}
+
+BUDGET RULES
+- All estimated costs must be numeric amounts in ${currency}.
+- Costs are estimates for the whole group, not per person.
+- Keep the total plan realistic for the stated budget.
+- Do not invent confirmed prices, ticket availability, opening hours, or hotel availability.
+- If a hotel is selected, do not add a second hotel or duplicate the accommodation cost in activity costs.
+- The estimatedBudget must not be presented as a verified quote.
+
+ITINERARY RULES
+- Return exactly ${duration} days.
+- Include 3 or 4 activities per day.
+- Each activity must have a time, title, description, and estimatedCost.
+- Include a sensible balance of sightseeing, meals, transport/rest time, and free time.
+- Match the travel style and interests.
+- Avoid scheduling too many distant locations in one day.
+- On the first day, allow reasonable time for arrival and hotel check-in if a hotel is selected.
+- Do not claim that you checked live maps, live prices, or opening hours.
+- Use general destination knowledge and avoid inventing specific business names if uncertain.
+
+OUTPUT REQUIREMENTS
+Return ONLY one valid JSON object.
+Do not include Markdown fences, comments, or text outside the JSON.
+Use this exact structure:
+
 {
   "itinerary": [
     {
@@ -359,42 +407,130 @@ Return ONLY a JSON object with this structure:
         {
           "time": "9:00 AM",
           "title": "Activity title",
-          "description": "Useful description",
+          "description": "Useful practical description",
           "estimatedCost": 500
         }
       ]
     }
   ],
   "estimatedBudget": 12000,
-  "tips": ["Practical travel tip"]
+  "tips": [
+    "Practical travel tip"
+  ]
+}
+`.trim();
 }
 
-Create exactly ${trip.duration} days, with 3 to 6 activities per day.
-Costs must be numeric amounts in ${trip.currency}, not strings.
-Estimate costs for the whole group, keep the plan mindful of the stated
-total budget, avoid inventing specific booking availability, and include
-a sensible mix of travel, meals, sightseeing, and rest. Make the plan
-match the travel style and interests.
+// HTTP requests with retry handling
 
-Use realistic general guidance. Do not claim prices or opening hours
-are verified.
+async function fetchWithRetry(url, options, providerName) {
+    let lastError;
 
-If a hotel is selected, include arrival/check-in guidance on the first
-day and keep activities reasonably located around the destination city.
-Do not invent hotel booking availability or add hotel costs to activity
-costs.
-`;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+        const controller = new AbortController();
 
-    const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-            model
-        )}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        const timeout = setTimeout(
+            () => controller.abort(),
+            REQUEST_TIMEOUT_MS
+        );
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+            });
+
+            clearTimeout(timeout);
+
+            if (response.ok) {
+                return response;
+            }
+
+            const responseText = await response.text();
+
+            const error = new Error(
+                `${providerName} API returned HTTP ${response.status}: ${responseText.slice(0, 800)}`
+            );
+
+            error.status = response.status;
+            error.retryAfter = response.headers.get("retry-after");
+
+            if (
+                !isRetryableStatus(response.status) ||
+                attempt >= MAX_RETRIES
+            ) {
+                throw error;
+            }
+
+            lastError = error;
+
+            console.warn(
+                `[Itinerary] ${providerName} request failed with HTTP ${response.status}. ` +
+                `Retry ${attempt + 1}/${MAX_RETRIES} scheduled.`
+            );
+
+            await sleep(getRetryDelay(attempt, error.retryAfter));
+        } catch (error) {
+            clearTimeout(timeout);
+
+            lastError = error;
+
+            const timedOut =
+                error?.name === "AbortError" ||
+                error?.name === "TimeoutError";
+
+            const networkError = !Number.isInteger(error?.status);
+
+            const retryable =
+                timedOut ||
+                networkError ||
+                isRetryableStatus(error?.status);
+
+            if (!retryable || attempt >= MAX_RETRIES) {
+                if (timedOut) {
+                    throw new Error(
+                        `${providerName} request timed out after ${REQUEST_TIMEOUT_MS / 1000} seconds.`
+                    );
+                }
+
+                throw error;
+            }
+
+            console.warn(
+                `[Itinerary] ${providerName} request failed: ${getErrorMessage(error)}. ` +
+                `Retry ${attempt + 1}/${MAX_RETRIES} scheduled.`
+            );
+
+            await sleep(getRetryDelay(attempt, error?.retryAfter));
+        }
+    }
+
+    throw lastError || new Error(`${providerName} request failed.`);
+}
+
+// Gemini provider
+
+async function callGemini(prompt) {
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is not configured.");
+    }
+
+    const model = DEFAULT_GEMINI_MODEL;
+
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/` +
+        `${encodeURIComponent(model)}:generateContent` +
+        `?key=${encodeURIComponent(apiKey)}`;
+
+    const response = await fetchWithRetry(
+        url,
         {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            signal: AbortSignal.timeout(45000),
             body: JSON.stringify({
                 contents: [
                     {
@@ -404,50 +540,213 @@ costs.
                 ],
                 generationConfig: {
                     responseMimeType: "application/json",
-                    temperature: 0.7,
+                    temperature: 0.4,
+                    maxOutputTokens: 12000,
                 },
             }),
-        }
+        },
+        `Gemini (${model})`
     );
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-
-        console.error(
-            "Gemini API request failed:",
-            response.status,
-            errorBody.slice(0, 500)
-        );
-
-        throw new Error(
-            "AI itinerary generation failed. Check the Gemini API key and model."
-        );
-    }
 
     const result = await response.json();
 
-    const text = result.candidates?.[0]?.content?.parts
+    const responseText = result.candidates?.[0]?.content?.parts
         ?.map((part) => part.text || "")
-        .join("");
+        .join("")
+        .trim();
 
-    if (!text) {
+    if (!responseText) {
+        const blockReason = result.promptFeedback?.blockReason;
+
         throw new Error(
-            "The AI did not return an itinerary. Please try again."
+            blockReason
+                ? `Gemini blocked the prompt: ${blockReason}`
+                : "Gemini returned an empty itinerary."
         );
     }
 
-    let parsed;
+    return parseJsonResponse(responseText);
+}
 
-    try {
-        parsed = JSON.parse(text);
-    } catch {
-        throw new Error(
-            "The AI returned an unreadable itinerary. Please try again."
-        );
+// Groq provider
+
+async function callGroq(prompt) {
+    const apiKey = process.env.GROQ_API_KEY;
+
+    if (!apiKey) {
+        throw new Error("GROQ_API_KEY is not configured.");
     }
 
-    return {
-        ...cleanItinerary(parsed, trip),
-        aiGenerated: true,
-    };
+    const model = DEFAULT_GROQ_MODEL;
+
+    const response = await fetchWithRetry(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    {
+                        role: "system",
+                        content:
+                            "You are a travel itinerary planner. Return only a valid JSON object matching the requested schema. Do not include Markdown or any text outside the JSON.",
+                    },
+                    {
+                        role: "user",
+                        content: prompt,
+                    },
+                ],
+                temperature: 0.3,
+                max_tokens: 12000,
+            }),
+        },
+        `Groq (${model})`
+    );
+
+    const result = await response.json();
+
+    const responseText =
+        result.choices?.[0]?.message?.content?.trim();
+
+    if (!responseText) {
+        throw new Error("Groq returned an empty itinerary.");
+    }
+
+    // Do not set response_format: { type: "json_object" }.
+    // Groq may reject JSON-mode generations with json_validate_failed.
+    // Request JSON in the prompt and validate the response here.
+    return parseJsonResponse(responseText);
+}
+
+
+// Main exported service
+
+export async function generateItinerary(trip) {
+    if (!trip || typeof trip !== "object") {
+        throw new Error("Trip details are required.");
+    }
+
+    const prompt = buildItineraryPrompt(trip);
+    const errors = [];
+
+    console.info("[Itinerary] Generation requested.", {
+        destination: getDestination(trip),
+        durationDays: getDuration(trip),
+        geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+        groqConfigured: Boolean(process.env.GROQ_API_KEY),
+        geminiModel: DEFAULT_GEMINI_MODEL,
+        groqModel: DEFAULT_GROQ_MODEL,
+    });
+
+    // Try Gemini first.
+    if (process.env.GEMINI_API_KEY) {
+        const startedAt = Date.now();
+
+        console.info(
+            `[Itinerary] Trying Gemini model "${DEFAULT_GEMINI_MODEL}".`
+        );
+
+        try {
+            const generated = await callGemini(prompt);
+            const cleaned = cleanItinerary(generated, trip);
+            const elapsedMs = Date.now() - startedAt;
+
+            console.info(
+                `[Itinerary] Gemini succeeded in ${elapsedMs}ms. ` +
+                `Days generated: ${cleaned.itinerary.length}.`
+            );
+
+            return {
+                ...cleaned,
+                aiGenerated: true,
+                aiProvider: "gemini",
+            };
+        } catch (error) {
+            const message = getErrorMessage(error);
+            const elapsedMs = Date.now() - startedAt;
+
+            errors.push(`Gemini: ${message}`);
+
+            console.error(
+                `[Itinerary] Gemini failed after ${elapsedMs}ms.`,
+                {
+                    model: DEFAULT_GEMINI_MODEL,
+                    message,
+                    status: error?.status ?? null,
+                    stack: error?.stack ?? null,
+                }
+            );
+        }
+    } else {
+        const message =
+            "GEMINI_API_KEY is not configured; skipping Gemini.";
+
+        console.warn(`[Itinerary] ${message}`);
+        errors.push(`Gemini: ${message}`);
+    }
+
+    // Try Groq if Gemini fails.
+    if (process.env.GROQ_API_KEY) {
+        const startedAt = Date.now();
+
+        console.info(
+            `[Itinerary] Gemini did not produce an itinerary. ` +
+            `Trying Groq model "${DEFAULT_GROQ_MODEL}" now.`
+        );
+
+        try {
+            const generated = await callGroq(prompt);
+            const cleaned = cleanItinerary(generated, trip);
+            const elapsedMs = Date.now() - startedAt;
+
+            console.info(
+                `[Itinerary] Groq succeeded in ${elapsedMs}ms. ` +
+                `Days generated: ${cleaned.itinerary.length}.`
+            );
+
+            return {
+                ...cleaned,
+                aiGenerated: true,
+                aiProvider: "groq",
+            };
+        } catch (error) {
+            const message = getErrorMessage(error);
+            const elapsedMs = Date.now() - startedAt;
+
+            errors.push(`Groq: ${message}`);
+
+            console.error(
+                `[Itinerary] Groq failed after ${elapsedMs}ms.`,
+                {
+                    model: DEFAULT_GROQ_MODEL,
+                    message,
+                    status: error?.status ?? null,
+                    stack: error?.stack ?? null,
+                }
+            );
+        }
+    } else {
+        const message =
+            "GROQ_API_KEY is not configured; skipping Groq.";
+
+        console.error(`[Itinerary] ${message}`);
+        errors.push(`Groq: ${message}`);
+    }
+
+    // Both providers failed.
+    const combinedError = errors.join(" | ");
+
+    console.error(
+        "[Itinerary] All configured AI providers failed. " +
+        "Full provider errors:",
+        combinedError
+    );
+
+    throw new Error(
+        `Unable to generate an AI itinerary. Please try again. ${combinedError}`
+    );
 }
