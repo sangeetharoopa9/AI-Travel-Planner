@@ -16,7 +16,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
-import { formatCurrency } from "../utils/currency";
 import "./Explore.css";
 
 const categories = [
@@ -145,7 +144,7 @@ function DestinationCard({
             <span>From</span>
 
             <strong>
-              {formatCurrency(destination.price)}
+              ${destination.price.toLocaleString("en-US")}
             </strong>
 
             <small>/ person</small>

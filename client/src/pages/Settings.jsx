@@ -19,7 +19,7 @@ import "./Settings.css";
 const DEFAULT_PREFERENCES = {
     budget: "moderate",
     travelStyle: "mixed",
-    currency: "INR",
+    currency: "USD",
     notifications: {
         dealAlerts: true,
         tripReminders: true,

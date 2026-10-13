@@ -16,7 +16,6 @@ import {
     ExternalLink,
 } from "lucide-react";
 import api from "../services/api";
-import { formatCurrency, getPreferredCurrency } from "../utils/currency";
 import "./Planner.css";
 
 const TRAVEL_STYLES = [
@@ -67,7 +66,11 @@ function formatDate(dateString) {
 }
 
 function formatMoney(value) {
-    return formatCurrency(value);
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+    }).format(Number(value) || 0);
 }
 
 export default function Planner() {
@@ -107,62 +110,73 @@ export default function Planner() {
             ) + 1
             : 0;
 
-
     useEffect(() => {
-        const destination = String(form.destination || "").trim();
+        const destination = form.destination.trim();
 
         if (!destination) {
             setHotels([]);
-            setHotelError("");
-            setHotelLoading(false);
             setSelectedHotelId("");
-            return;
+            setHotelError("");
+            return undefined;
         }
 
         let cancelled = false;
 
-        const timer = setTimeout(async () => {
-            setHotelLoading(true);
-            setHotelError("");
+        const nights = Math.max(duration - 1, 1);
+        const maxNightlyPrice = Math.floor(
+            (Number(form.budget || 0) * 0.35) / nights
+        );
 
-            try {
-                const response = await api.get("/catalog/hotels/search", {
-                    params: { destination },
-                    timeout: 30000,
-                });
+        setHotelLoading(true);
+        setHotelError("");
 
+        api
+            .get("/catalog/hotels", {
+                params: {
+                    destination,
+                    city: selectedDestination.city || "",
+                    country: selectedDestination.country || "",
+                    maxNightlyPrice,
+                },
+            })
+            .then((response) => {
                 if (cancelled) return;
 
-                const availableHotels = response.data?.data?.hotels || [];
+                const items = response.data?.data?.hotels;
+                const availableHotels = Array.isArray(items) ? items : [];
 
                 setHotels(availableHotels);
-
                 setSelectedHotelId((currentId) =>
                     availableHotels.some(
-                        (hotel) => String(hotel.placeId) === currentId
+                        (hotel) => String(hotel._id) === currentId
                     )
                         ? currentId
                         : ""
                 );
-            } catch (error) {
+            })
+            .catch((requestError) => {
                 if (cancelled) return;
 
                 setHotels([]);
                 setHotelError(
-                    error.response?.data?.message ||
-                    "Hotel search is temporarily unavailable. Please try again."
+                    requestError.response?.data?.message ||
+                    "We couldn't load hotels for this destination. You can still create your itinerary."
                 );
-            } finally {
+            })
+            .finally(() => {
                 if (!cancelled) setHotelLoading(false);
-            }
-        }, 800);
+            });
 
         return () => {
             cancelled = true;
-            clearTimeout(timer);
         };
-    }, [form.destination]);
-
+    }, [
+        form.destination,
+        form.budget,
+        duration,
+        selectedDestination.city,
+        selectedDestination.country,
+    ]);
 
     function updateField(event) {
         const { name, value } = event.target;
@@ -231,12 +245,11 @@ export default function Planner() {
                 endDate: form.endDate,
                 travelers: Number(form.travelers),
                 budget: Number(form.budget),
-                currency: getPreferredCurrency(),
                 travelStyle: form.travelStyle,
                 interests: form.interests,
                 destinationCity: selectedDestination.city || "",
                 destinationCountry: selectedDestination.country || "",
-                hotel: hotels.find((item) => String(item.placeId) === selectedHotelId) || null,
+                hotelId: selectedHotelId || null,
             });
 
             setTrip(response.data.data.trip);
@@ -430,7 +443,7 @@ export default function Planner() {
 
                         <div className="planner-field">
                             <label htmlFor="trip-budget">
-                                Total budget ({getPreferredCurrency()})
+                                Total budget (INR)
                             </label>
 
                             <div className="planner-input-with-icon">
@@ -446,7 +459,7 @@ export default function Planner() {
                                     onChange={updateField}
                                     required
                                 />
-
+                                
                             </div>
                         </div>
                     </div>
@@ -470,18 +483,21 @@ export default function Planner() {
                             <div>
                                 <h3 id="planner-hotels-title">Choose your stay</h3>
                                 <p>
-                                    Real hotel listings for {form.destination || "your destination"}, from OpenStreetMap, prioritized by available details and proximity.
+                                    Hotels listed for{" "}
+                                    {form.destination || "your destination"}, filtered
+                                    by your trip budget.
                                 </p>
                             </div>
                         </div>
 
                         <p className="planner-hotel-budget-note">
-                            These are community-mapped places from OpenStreetMap. Ratings, nightly rates and room availability may not be available; confirm details with the hotel before booking. Data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>.
+                            Hotel prices are treated as per night. We use up to 35%
+                            of your total budget for accommodation.
                         </p>
 
                         {hotelLoading ? (
                             <div className="planner-hotels-state">
-                                Searching real hotels for this location…
+                                Finding hotels within your budget…
                             </div>
                         ) : hotelError ? (
                             <div className="planner-hotels-state planner-hotels-state-error">
@@ -490,7 +506,7 @@ export default function Planner() {
                         ) : hotels.length > 0 ? (
                             <div className="planner-hotel-grid">
                                 {hotels.map((hotel) => {
-                                    const hotelId = String(hotel.placeId);
+                                    const hotelId = String(hotel._id);
                                     const isSelected = selectedHotelId === hotelId;
 
                                     return (
@@ -534,7 +550,7 @@ export default function Planner() {
 
                                                 <span className="planner-hotel-location">
                                                     <MapPin size={13} />
-                                                    {hotel.address || [hotel.city, hotel.country]
+                                                    {[hotel.city, hotel.country]
                                                         .filter(Boolean)
                                                         .join(", ") || form.destination}
                                                 </span>
@@ -548,22 +564,14 @@ export default function Planner() {
                                                     )}
 
                                                     <strong>
-                                                        {hotel.priceAvailable && Number.isFinite(Number(hotel.price))
-                                                            ? <>{formatMoney(hotel.price)} <small>/ night</small></>
-                                                            : <small>Check rates with hotel</small>}
+                                                        {formatMoney(hotel.price)}{" "}
+                                                        <small>/ night</small>
                                                     </strong>
                                                 </span>
 
-                                                {(hotel.category || hotel.distanceKm != null) && (
+                                                {hotel.amenities?.length > 0 && (
                                                     <span className="planner-hotel-amenities">
-                                                        {hotel.category || "Accommodation"}{hotel.distanceKm != null ? ` · ${hotel.distanceKm} km from location centre` : ""} · OpenStreetMap
-                                                    </span>
-                                                )}
-
-                                                {(hotel.website || hotel.mapsUri) && (
-                                                    <span className="planner-hotel-links">
-                                                        {hotel.website && <a href={hotel.website} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>Website <ExternalLink size={12} /></a>}
-                                                        {hotel.mapsUri && <a href={hotel.mapsUri} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>View map <ExternalLink size={12} /></a>}
+                                                        {hotel.amenities.slice(0, 3).join(" · ")}
                                                     </span>
                                                 )}
                                             </span>
@@ -576,8 +584,15 @@ export default function Planner() {
                                 <HotelIcon size={23} />
 
                                 <div>
-                                    <strong>No hotels found for this location</strong>
-                                    <p>Try a nearby city or include the country. OpenStreetMap coverage varies by location; if a hotel is missing, search its name separately or continue without selecting a hotel.</p>
+                                    <strong>
+                                        No hotels found within this budget
+                                    </strong>
+
+                                    <p>
+                                        Try increasing your trip budget, or add hotel
+                                        listings for this city in the Admin Panel. You can
+                                        still generate the itinerary without a hotel.
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -631,8 +646,8 @@ export default function Planner() {
                                     key={interest}
                                     type="button"
                                     className={`planner-interest ${form.interests.includes(interest)
-                                        ? "selected"
-                                        : ""
+                                            ? "selected"
+                                            : ""
                                         }`}
                                     onClick={() => toggleInterest(interest)}
                                     aria-pressed={form.interests.includes(interest)}
@@ -749,21 +764,23 @@ export default function Planner() {
 
                                 <h3>{trip.hotel.name}</h3>
 
-                                <p>{trip.hotel.address || [trip.hotel.city, trip.hotel.country].filter(Boolean).join(", ") || trip.destination}</p>
+                                <p>
+                                    {[trip.hotel.city, trip.hotel.country]
+                                        .filter(Boolean)
+                                        .join(", ")}
+                                </p>
 
                                 <strong>
-                                    {Number(trip.hotel.pricePerNight) > 0
-                                        ? <>{formatMoney(trip.hotel.pricePerNight)} / night</>
-                                        : "Rates vary — check with the hotel"}
+                                    {formatMoney(trip.hotel.pricePerNight)} / night
                                 </strong>
 
-                                {(trip.hotel.website || trip.hotel.mapsUri) && (
+                                {trip.hotel.website && (
                                     <a
-                                        href={trip.hotel.website || trip.hotel.mapsUri}
+                                        href={trip.hotel.website}
                                         target="_blank"
                                         rel="noreferrer"
                                     >
-                                        Hotel details <ExternalLink size={13} />
+                                        Hotel website <ExternalLink size={13} />
                                     </a>
                                 )}
                             </div>

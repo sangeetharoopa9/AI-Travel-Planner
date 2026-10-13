@@ -1,10 +1,10 @@
 
-import { MapPin, Menu, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Bell, ChevronDown, MapPin, Menu, Search } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import "./Topbar.css";
 
-function Topbar({ onMenuClick = () => {}, sidebarCollapsed = false, mobileSidebarOpen = false }) {
+function Topbar() {
     const [showProfile, setShowProfile] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const location = useLocation();
@@ -56,23 +56,8 @@ function Topbar({ onMenuClick = () => {}, sidebarCollapsed = false, mobileSideba
                 </div>
             </div>
 
-            <button
-                type="button"
-                className="mobile-menu-button"
-                aria-label={mobileSidebarOpen ? "Close navigation menu" : "Open navigation menu"}
-                aria-expanded={mobileSidebarOpen}
-                onClick={onMenuClick}
-            >
-                {mobileSidebarOpen ? <X size={21} /> : <Menu size={21} />}
-            </button>
-            <button
-                type="button"
-                className="desktop-sidebar-toggle"
-                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                onClick={onMenuClick}
-            >
-                {sidebarCollapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
+            <button className="mobile-menu-button" aria-label="Open menu">
+                <Menu size={21} />
             </button>
         </header>
     );

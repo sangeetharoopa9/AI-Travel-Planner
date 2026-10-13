@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     AlertCircle,
     ArrowDown,
@@ -27,8 +27,6 @@ const DEFAULT_LOCATION = {
     lon: 77.4119,
 };
 
-const TYPICAL_YEARS = 5;
-
 const WEATHER_CODES = {
     0: { label: "Clear sky", icon: Sun },
     1: { label: "Mainly clear", icon: Sun },
@@ -53,38 +51,8 @@ const WEATHER_CODES = {
     99: { label: "Heavy thunderstorm with hail", icon: CloudRain },
 };
 
-const SOURCE_LABELS = {
-    forecast: "Forecast",
-    historical: "Actual",
-    typical: "Typical",
-};
-
 function getWeatherInfo(code) {
-    return WEATHER_CODES[code] || {
-        label: "Conditions unavailable",
-        icon: CloudSun,
-    };
-}
-
-function dateToISO(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-}
-
-function addDays(dateString, amount) {
-    const date = new Date(`${dateString}T12:00:00Z`);
-    date.setUTCDate(date.getUTCDate() + amount);
-    return date.toISOString().slice(0, 10);
-}
-
-function shiftYears(dateString, years) {
-    const [year, month, day] = dateString.split("-").map(Number);
-    const date = new Date(Date.UTC(year + years, month - 1, day, 12));
-    // Feb 29 in a non-leap year rolls into March, so step back to Feb 28.
-    if (date.getUTCMonth() !== month - 1) date.setUTCDate(0);
-    return date.toISOString().slice(0, 10);
+    return WEATHER_CODES[code] || { label: "Conditions unavailable", icon: CloudSun };
 }
 
 function formatDay(dateString) {
@@ -94,17 +62,6 @@ function formatDay(dateString) {
         month: "short",
         timeZone: "UTC",
     }).format(new Date(`${dateString}T12:00:00Z`));
-}
-
-function formatWeekRange(startDate) {
-    return `${formatDay(startDate)} – ${formatDay(addDays(startDate, 6))}`;
-}
-
-function getMonday(dateString) {
-    const date = new Date(`${dateString}T12:00:00Z`);
-    const weekday = date.getUTCDay();
-    date.setUTCDate(date.getUTCDate() - ((weekday + 6) % 7));
-    return date.toISOString().slice(0, 10);
 }
 
 function formatDistance(meters) {
@@ -134,11 +91,13 @@ async function searchLocation(query) {
     url.searchParams.set("addressdetails", "1");
 
     const response = await fetch(url);
+
     if (!response.ok) {
         throw new Error("Location search is temporarily unavailable.");
     }
 
     const results = await response.json();
+
     if (!results.length) {
         throw new Error("Location not found. Try a city, landmark, or address.");
     }
@@ -153,137 +112,36 @@ async function searchLocation(query) {
     };
 }
 
-async function fetchForecast(lat, lon) {
+async function getWeather(lat, lon) {
     const url = new URL("https://api.open-meteo.com/v1/forecast");
+
     url.searchParams.set("latitude", String(lat));
     url.searchParams.set("longitude", String(lon));
-    url.searchParams.set(
-        "current",
-        [
-            "temperature_2m",
-            "relative_humidity_2m",
-            "apparent_temperature",
-            "precipitation",
-            "weather_code",
-            "wind_speed_10m",
-        ].join(",")
-    );
-    url.searchParams.set(
-        "daily",
-        [
-            "weather_code",
-            "temperature_2m_max",
-            "temperature_2m_min",
-            "precipitation_probability_max",
-        ].join(",")
-    );
-    url.searchParams.set("past_days", "7");
-    url.searchParams.set("forecast_days", "16");
+    url.searchParams.set("current", [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "apparent_temperature",
+        "is_day",
+        "precipitation",
+        "weather_code",
+        "wind_speed_10m",
+    ].join(","));
+    url.searchParams.set("daily", [
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_probability_max",
+    ].join(","));
+    url.searchParams.set("forecast_days", "5");
     url.searchParams.set("timezone", "auto");
 
     const response = await fetch(url);
+
     if (!response.ok) {
         throw new Error("Weather data is temporarily unavailable.");
     }
 
     return response.json();
-}
-
-async function fetchHistoricalWeather(lat, lon, startDate, endDate) {
-    const url = new URL("https://archive-api.open-meteo.com/v1/archive");
-    url.searchParams.set("latitude", String(lat));
-    url.searchParams.set("longitude", String(lon));
-    url.searchParams.set("start_date", startDate);
-    url.searchParams.set("end_date", endDate);
-    url.searchParams.set(
-        "daily",
-        [
-            "weather_code",
-            "temperature_2m_max",
-            "temperature_2m_min",
-            "precipitation_sum",
-        ].join(",")
-    );
-    url.searchParams.set("timezone", "auto");
-
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error("Historical weather data is unavailable.");
-    }
-
-    return response.json();
-}
-
-// Builds "typical" weather for a week beyond the forecast window by
-// averaging the same calendar dates over the last few complete years.
-async function fetchTypicalWeek(lat, lon, weekStart, todayDate) {
-    const weekEnd = addDays(weekStart, 6);
-    const startYear = Number(weekStart.slice(0, 4));
-    const latestYear = Number(todayDate.slice(0, 4)) - 1;
-
-    const settled = await Promise.allSettled(
-        Array.from({ length: TYPICAL_YEARS }, (_, step) => {
-            const offset = latestYear - step - startYear;
-            return fetchHistoricalWeather(
-                lat,
-                lon,
-                shiftYears(weekStart, offset),
-                shiftYears(weekEnd, offset)
-            );
-        })
-    );
-
-    const samples = settled
-        .filter((item) => item.status === "fulfilled" && item.value?.daily?.time?.length)
-        .map((item) => item.value.daily);
-
-    if (!samples.length) {
-        throw new Error("Typical weather data is unavailable for this week.");
-    }
-
-    const pick = (field, index) => samples.map((sample) => sample[field]?.[index]);
-
-    const average = (values) => {
-        const numbers = values.filter(Number.isFinite);
-        return numbers.length
-            ? numbers.reduce((sum, value) => sum + value, 0) / numbers.length
-            : null;
-    };
-
-    const mostCommon = (values) => {
-        const counts = new Map();
-        values.filter(Number.isFinite).forEach((value) => {
-            counts.set(value, (counts.get(value) || 0) + 1);
-        });
-        let best = null;
-        let bestCount = 0;
-        counts.forEach((count, value) => {
-            if (count > bestCount) {
-                best = value;
-                bestCount = count;
-            }
-        });
-        return best;
-    };
-
-    const rainyShare = (values) => {
-        const numbers = values.filter(Number.isFinite);
-        if (!numbers.length) return null;
-        const rainyDays = numbers.filter((value) => value >= 1).length;
-        return Math.round((rainyDays / numbers.length) * 100);
-    };
-
-    const indexes = Array.from({ length: 7 }, (_, index) => index);
-
-    return {
-        weather_code: indexes.map((index) => mostCommon(pick("weather_code", index))),
-        temperature_2m_max: indexes.map((index) => average(pick("temperature_2m_max", index))),
-        temperature_2m_min: indexes.map((index) => average(pick("temperature_2m_min", index))),
-        precipitation_sum: indexes.map((index) => average(pick("precipitation_sum", index))),
-        precipitation_probability_max: indexes.map((index) =>
-            rainyShare(pick("precipitation_sum", index))
-        ),
-    };
 }
 
 function WeatherMetric({ icon: Icon, label, value }) {
@@ -306,13 +164,6 @@ function MapsWeather() {
     const [locationLoading, setLocationLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const [selectedWeekStart, setSelectedWeekStart] = useState(
-        () => getMonday(dateToISO(new Date()))
-    );
-    const [selectedWeekData, setSelectedWeekData] = useState(null);
-    const [weekLoading, setWeekLoading] = useState(false);
-    const [weekError, setWeekError] = useState("");
-
     const [startQuery, setStartQuery] = useState("");
     const [endQuery, setEndQuery] = useState("");
     const [routeStart, setRouteStart] = useState(null);
@@ -321,14 +172,11 @@ function MapsWeather() {
     const [routeLoading, setRouteLoading] = useState(false);
     const [routeError, setRouteError] = useState("");
 
-    const today = dateToISO(new Date());
-
     const loadWeather = useCallback(async (selectedLocation) => {
         setWeatherLoading(true);
-        setError("");
 
         try {
-            const result = await fetchForecast(
+            const result = await getWeather(
                 selectedLocation.lat,
                 selectedLocation.lon
             );
@@ -345,139 +193,10 @@ function MapsWeather() {
         loadWeather(location);
     }, [location, loadWeather]);
 
-    const weekDates = useMemo(
-        () => Array.from({ length: 7 }, (_, index) =>
-            addDays(selectedWeekStart, index)
-        ),
-        [selectedWeekStart]
-    );
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function loadSelectedWeek() {
-            setWeekLoading(true);
-            setWeekError("");
-            setSelectedWeekData(null);
-
-            try {
-                const forecast = weather?.daily;
-                const forecastDates = forecast?.time || [];
-
-                const missingDates = weekDates.filter(
-                    (date) => !forecastDates.includes(date)
-                );
-                const pastMissing = missingDates.filter((date) => date < today);
-                const futureMissing = missingDates.filter((date) => date >= today);
-
-                const [historical, typical] = await Promise.all([
-                    pastMissing.length
-                        ? fetchHistoricalWeather(
-                            location.lat,
-                            location.lon,
-                            pastMissing[0],
-                            pastMissing[pastMissing.length - 1]
-                        )
-                        : null,
-                    futureMissing.length
-                        ? fetchTypicalWeek(
-                            location.lat,
-                            location.lon,
-                            selectedWeekStart,
-                            today
-                        )
-                        : null,
-                ]);
-
-                const daily = {
-                    time: weekDates,
-                    weather_code: [],
-                    temperature_2m_max: [],
-                    temperature_2m_min: [],
-                    precipitation_probability_max: [],
-                    precipitation_sum: [],
-                    sources: [],
-                };
-
-                weekDates.forEach((date, index) => {
-                    const forecastIndex = forecastDates.indexOf(date);
-
-                    if (forecastIndex >= 0) {
-                        daily.weather_code.push(forecast.weather_code?.[forecastIndex]);
-                        daily.temperature_2m_max.push(forecast.temperature_2m_max?.[forecastIndex]);
-                        daily.temperature_2m_min.push(forecast.temperature_2m_min?.[forecastIndex]);
-                        daily.precipitation_probability_max.push(
-                            forecast.precipitation_probability_max?.[forecastIndex]
-                        );
-                        daily.precipitation_sum.push(null);
-                        daily.sources.push("forecast");
-                        return;
-                    }
-
-                    if (date < today) {
-                        const archive = historical?.daily;
-                        const archiveIndex = archive?.time?.indexOf(date) ?? -1;
-                        daily.weather_code.push(archive?.weather_code?.[archiveIndex]);
-                        daily.temperature_2m_max.push(archive?.temperature_2m_max?.[archiveIndex]);
-                        daily.temperature_2m_min.push(archive?.temperature_2m_min?.[archiveIndex]);
-                        daily.precipitation_probability_max.push(null);
-                        daily.precipitation_sum.push(archive?.precipitation_sum?.[archiveIndex]);
-                        daily.sources.push("historical");
-                        return;
-                    }
-
-                    daily.weather_code.push(typical?.weather_code?.[index]);
-                    daily.temperature_2m_max.push(typical?.temperature_2m_max?.[index]);
-                    daily.temperature_2m_min.push(typical?.temperature_2m_min?.[index]);
-                    daily.precipitation_probability_max.push(
-                        typical?.precipitation_probability_max?.[index]
-                    );
-                    daily.precipitation_sum.push(typical?.precipitation_sum?.[index]);
-                    daily.sources.push("typical");
-                });
-
-                const uniqueSources = [...new Set(daily.sources)];
-                const source = uniqueSources.length === 1 ? uniqueSources[0] : "mixed";
-                const labels = {
-                    forecast: "Forecast",
-                    historical: "Historical weather",
-                    typical: "Typical weather",
-                    mixed: "Mixed sources",
-                };
-
-                if (!cancelled) {
-                    setSelectedWeekData({
-                        daily,
-                        source,
-                        label: labels[source],
-                    });
-                }
-            } catch (loadError) {
-                if (!cancelled) {
-                    setWeekError(
-                        loadError.message ||
-                        "Unable to load weather for this week."
-                    );
-                }
-            } finally {
-                if (!cancelled) setWeekLoading(false);
-            }
-        }
-
-        // Wait until the current forecast has loaded before classifying the week.
-        if (weather || error) {
-            loadSelectedWeek();
-        }
-
-        return () => {
-            cancelled = true;
-        };
-    }, [selectedWeekStart, weekDates, weather, location, today, error]);
-
     async function handleLocationSearch(event) {
         event.preventDefault();
-        const query = locationQuery.trim();
 
+        const query = locationQuery.trim();
         if (!query || locationLoading) return;
 
         setLocationLoading(true);
@@ -505,13 +224,11 @@ function MapsWeather() {
         setLocationLoading(true);
 
         navigator.geolocation.getCurrentPosition(
-            async ({ coords }) => {
-                const { latitude, longitude } = coords;
+            async (position) => {
+                const { latitude, longitude } = position.coords;
 
                 try {
-                    const url = new URL(
-                        "https://nominatim.openstreetmap.org/reverse"
-                    );
+                    const url = new URL("https://nominatim.openstreetmap.org/reverse");
                     url.searchParams.set("lat", String(latitude));
                     url.searchParams.set("lon", String(longitude));
                     url.searchParams.set("format", "jsonv2");
@@ -539,11 +256,14 @@ function MapsWeather() {
             },
             (geoError) => {
                 setLocationLoading(false);
-                setError(
-                    geoError.code === 1
-                        ? "Location permission was denied. You can search manually."
-                        : "Unable to get your location. Please search manually."
-                );
+
+                if (geoError.code === 1) {
+                    setError("Location permission was denied. You can search manually.");
+                } else if (geoError.code === 3) {
+                    setError("Location request timed out. Please try again.");
+                } else {
+                    setError("Unable to get your location. Please search manually.");
+                }
             },
             { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 }
         );
@@ -573,21 +293,23 @@ function MapsWeather() {
                 `https://router.project-osrm.org/route/v1/driving/` +
                 `${start.lon},${start.lat};${end.lon},${end.lat}`;
 
-            const response = await fetch(
+            const routeResponse = await fetch(
                 `${url}?overview=false&steps=false`
             );
-            if (!response.ok) {
+
+            if (!routeResponse.ok) {
                 throw new Error("The route service is temporarily unavailable.");
             }
 
-            const data = await response.json();
-            if (data.code !== "Ok" || !data.routes?.length) {
+            const routeData = await routeResponse.json();
+
+            if (routeData.code !== "Ok" || !routeData.routes?.length) {
                 throw new Error("No driving route was found between these locations.");
             }
 
             setRouteStart(start);
             setRouteEnd(end);
-            setRouteResult(data.routes[0]);
+            setRouteResult(routeData.routes[0]);
         } catch (routeSearchError) {
             setRouteError(
                 routeSearchError.message || "Unable to calculate the route."
@@ -598,53 +320,22 @@ function MapsWeather() {
     }
 
     const current = weather?.current;
-    const currentWeather = getWeatherInfo(current?.weather_code);
+    const daily = weather?.daily;
+    const currentWeather = current
+        ? getWeatherInfo(current.weather_code)
+        : getWeatherInfo(-1);
     const CurrentWeatherIcon = currentWeather.icon;
 
-    const mapEmbedUrl =
-        `https://www.openstreetmap.org/export/embed.html?bbox=` +
-        `${location.lon - 0.12}%2C${location.lat - 0.08}%2C` +
-        `${location.lon + 0.12}%2C${location.lat + 0.08}` +
-        `&layer=mapnik&marker=${location.lat}%2C${location.lon}`;
+    const mapEmbedUrl = location
+        ? `https://www.openstreetmap.org/export/embed.html?bbox=${location.lon - 0.12}%2C${location.lat - 0.08}%2C${location.lon + 0.12}%2C${location.lat + 0.08}&layer=mapnik&marker=${location.lat}%2C${location.lon}`
+        : "";
 
     const routeDirectionsUrl =
         routeStart && routeEnd
             ? `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
                 routeStart.displayName
-            )}&destination=${encodeURIComponent(
-                routeEnd.displayName
-            )}&travelmode=driving`
+            )}&destination=${encodeURIComponent(routeEnd.displayName)}&travelmode=driving`
             : "";
-
-    function shiftWeek(days) {
-        setSelectedWeekStart((currentStart) => addDays(currentStart, days));
-    }
-
-    function getDataLabelSuffix(source) {
-        if (source === "historical") {
-            return " · Actual historical observations, not a forecast";
-        }
-        if (source === "typical") {
-            return ` · Average of the same dates over the last ${TYPICAL_YEARS} years, not a forecast`;
-        }
-        if (source === "mixed") {
-            return " · Each day is tagged with its data source";
-        }
-        return " · Forecast data";
-    }
-
-    function getDataSourceNote(source) {
-        if (source === "historical") {
-            return "Historical data from Open-Meteo Archive API. Past conditions do not predict future weather.";
-        }
-        if (source === "typical") {
-            return `Typical conditions are averaged from the same dates over the last ${TYPICAL_YEARS} years (Open-Meteo Archive API). Rain % is the share of those years with at least 1 mm of rain. Day-by-day forecasts are only available about 16 days ahead.`;
-        }
-        if (source === "mixed") {
-            return "Forecast days come from Open-Meteo's forecast. Other days show typical or actual conditions for those dates, as tagged.";
-        }
-        return "Forecast data by Open-Meteo. Forecast availability is limited to the provider's forecast window.";
-    }
 
     return (
         <div className="mw-page">
@@ -680,10 +371,7 @@ function MapsWeather() {
                     placeholder="Search a city, country, or landmark..."
                     aria-label="Search for a location"
                 />
-                <button
-                    type="submit"
-                    disabled={locationLoading || !locationQuery.trim()}
-                >
+                <button type="submit" disabled={locationLoading || !locationQuery.trim()}>
                     {locationLoading ? (
                         <LoaderCircle size={17} className="mw-spin" />
                     ) : (
@@ -696,6 +384,7 @@ function MapsWeather() {
                     className="mw-location-button"
                     onClick={handleUseMyLocation}
                     disabled={locationLoading}
+                    title="Use your current browser location"
                 >
                     <Navigation size={16} />
                     <span>My location</span>
@@ -706,11 +395,7 @@ function MapsWeather() {
                 <div className="mw-alert" role="alert">
                     <AlertCircle size={18} />
                     <span>{error}</span>
-                    <button
-                        type="button"
-                        onClick={() => setError("")}
-                        aria-label="Dismiss error"
-                    >
+                    <button type="button" onClick={() => setError("")} aria-label="Dismiss error">
                         ×
                     </button>
                 </div>
@@ -763,7 +448,9 @@ function MapsWeather() {
                                     value={`${current.precipitation} mm`}
                                 />
                             </div>
-                            <p className="mw-data-source">Weather data by Open-Meteo</p>
+                            <p className="mw-data-source">
+                                Weather data by Open-Meteo
+                            </p>
                         </>
                     ) : (
                         <div className="mw-empty-state">
@@ -784,10 +471,12 @@ function MapsWeather() {
                             rel="noreferrer"
                             className="mw-icon-link"
                             aria-label="Open map in OpenStreetMap"
+                            title="Open full map"
                         >
                             <ExternalLink size={17} />
                         </a>
                     </div>
+
                     <div className="mw-map-frame">
                         <iframe
                             key={`${location.lat}-${location.lon}`}
@@ -797,6 +486,7 @@ function MapsWeather() {
                             referrerPolicy="no-referrer-when-downgrade"
                         />
                     </div>
+
                     <div className="mw-map-footer">
                         <MapPin size={16} />
                         <span>{location.displayName}</span>
@@ -805,139 +495,52 @@ function MapsWeather() {
             </section>
 
             <section className="mw-forecast-section">
-                <div className="mw-section-heading mw-forecast-heading">
+                <div className="mw-section-heading">
                     <div>
                         <span className="mw-card-kicker">PLAN AHEAD</span>
-                        <h2>7-day weather</h2>
-                        <p className="mw-forecast-range">
-                            {formatWeekRange(selectedWeekStart)}
-                        </p>
+                        <h2>5-day forecast</h2>
                     </div>
-
-                    <label className="mw-forecast-date-filter">
-                        <span>Choose any week</span>
-                        <input
-                            type="date"
-                            value={selectedWeekStart}
-                            onChange={(event) => {
-                                if (event.target.value) {
-                                    setSelectedWeekStart(
-                                        getMonday(event.target.value)
-                                    );
-                                }
-                            }}
-                            aria-label="Choose a date in the week to view"
-                        />
-                        <small>
-                            Choose a date in any month. The full Monday–Sunday
-                            week will be displayed.
-                        </small>
-                    </label>
+                    <span className="mw-updated-label">
+                        <CloudSun size={16} />
+                        {weather?.timezone_abbreviation || "Local time"}
+                    </span>
                 </div>
 
-                <div className="mw-forecast-navigation">
-                    <button
-                        type="button"
-                        className="mw-secondary-button"
-                        onClick={() => shiftWeek(-7)}
-                    >
-                        <ArrowDown
-                            size={16}
-                            style={{ transform: "rotate(90deg)" }}
-                        />
-                        Previous week
-                    </button>
-                    <button
-                        type="button"
-                        className="mw-secondary-button"
-                        onClick={() => shiftWeek(7)}
-                    >
-                        Next week
-                        <ArrowRight size={16} />
-                    </button>
-                </div>
-
-                {weekLoading ? (
+                {weatherLoading ? (
                     <div className="mw-forecast-loading">
                         <LoaderCircle className="mw-spin" size={22} />
-                        <span>Loading weather for the selected week...</span>
+                        <span>Getting the forecast...</span>
                     </div>
-                ) : weekError ? (
-                    <div className="mw-empty-state" role="status">
-                        <AlertCircle size={18} />
-                        <span>{weekError}</span>
+                ) : daily?.time?.length ? (
+                    <div className="mw-forecast-grid">
+                        {daily.time.map((date, index) => {
+                            const info = getWeatherInfo(daily.weather_code[index]);
+                            const DayIcon = info.icon;
+
+                            return (
+                                <article className="mw-forecast-day" key={date}>
+                                    <span className="mw-forecast-date">{formatDay(date)}</span>
+                                    <DayIcon size={29} strokeWidth={1.6} />
+                                    <span className="mw-forecast-description">{info.label}</span>
+                                    <div className="mw-forecast-temperatures">
+                                        <strong>
+                                            {Math.round(daily.temperature_2m_max[index])}°
+                                        </strong>
+                                        <span>
+                                            {Math.round(daily.temperature_2m_min[index])}°
+                                        </span>
+                                    </div>
+                                    <div className="mw-rain-chance">
+                                        <Droplets size={14} />
+                                        {daily.precipitation_probability_max?.[index] ?? 0}%
+                                    </div>
+                                </article>
+                            );
+                        })}
                     </div>
-                ) : selectedWeekData ? (
-                    <>
-                        <p className="mw-forecast-data-label">
-                            {selectedWeekData.label}
-                            {getDataLabelSuffix(selectedWeekData.source)}
-                        </p>
-
-                        <div className="mw-forecast-grid">
-                            {weekDates.map((date, index) => {
-                                const daily = selectedWeekData.daily;
-                                const daySource = daily.sources[index];
-                                const code = daily.weather_code?.[index];
-                                const info = getWeatherInfo(code);
-                                const DayIcon = info.icon;
-                                const maxTemp = daily.temperature_2m_max?.[index];
-                                const minTemp = daily.temperature_2m_min?.[index];
-                                const rainChance =
-                                    daily.precipitation_probability_max?.[index];
-                                const rainAmount = daily.precipitation_sum?.[index];
-
-                                let rainText = "—";
-                                if (daySource === "historical") {
-                                    rainText = Number.isFinite(rainAmount)
-                                        ? `${rainAmount.toFixed(1)} mm`
-                                        : "—";
-                                } else if (Number.isFinite(rainChance)) {
-                                    rainText = `${daySource === "typical" ? "~" : ""}${rainChance}%`;
-                                }
-
-                                return (
-                                    <article className="mw-forecast-day" key={date}>
-                                        <span className="mw-forecast-date">
-                                            {formatDay(date)}
-                                        </span>
-                                        <DayIcon size={29} strokeWidth={1.6} />
-                                        <span className="mw-forecast-description">
-                                            {info.label}
-                                        </span>
-                                        <div className="mw-forecast-temperatures">
-                                            <strong>
-                                                {Number.isFinite(maxTemp)
-                                                    ? `${Math.round(maxTemp)}°`
-                                                    : "—"}
-                                            </strong>
-                                            <span>
-                                                {Number.isFinite(minTemp)
-                                                    ? `${Math.round(minTemp)}°`
-                                                    : "—"}
-                                            </span>
-                                        </div>
-                                        <div className="mw-rain-chance">
-                                            <Droplets size={14} />
-                                            {rainText}
-                                        </div>
-                                        <span
-                                            className={`mw-forecast-source mw-forecast-source-${daySource}`}
-                                        >
-                                            {SOURCE_LABELS[daySource]}
-                                        </span>
-                                    </article>
-                                );
-                            })}
-                        </div>
-
-                        <p className="mw-data-source">
-                            {getDataSourceNote(selectedWeekData.source)}
-                        </p>
-                    </>
                 ) : (
                     <div className="mw-empty-state">
-                        No weather data is available for this week.
+                        The forecast could not be loaded. Try refreshing the weather.
                     </div>
                 )}
             </section>
@@ -948,8 +551,7 @@ function MapsWeather() {
                         <span className="mw-card-kicker">GETTING THERE</span>
                         <h2>Plan a driving route</h2>
                         <p className="mw-section-description">
-                            Calculate an estimated driving distance and travel time
-                            between two places.
+                            Calculate an estimated driving distance and travel time between two places.
                         </p>
                     </div>
                     <span className="mw-route-badge">
@@ -1017,8 +619,7 @@ function MapsWeather() {
                             <div>
                                 <strong>Route calculated</strong>
                                 <span>
-                                    {routeStart.name} <ArrowRight size={13} />{" "}
-                                    {routeEnd.name}
+                                    {routeStart.name} <ArrowRight size={13} /> {routeEnd.name}
                                 </span>
                             </div>
                         </div>
@@ -1046,8 +647,7 @@ function MapsWeather() {
                             <ExternalLink size={16} />
                         </a>
                         <p className="mw-data-source">
-                            Estimates are provided by OSRM and may differ from
-                            actual travel times.
+                            Estimates are provided by OSRM and may differ from actual travel times.
                         </p>
                     </div>
                 )}
@@ -1062,9 +662,7 @@ function MapsWeather() {
 
             <footer className="mw-page-footer">
                 <span>Roamwise Maps &amp; Weather</span>
-                <span>
-                    Maps: OpenStreetMap · Forecast: Open-Meteo · Routes: OSRM
-                </span>
+                <span>Maps: OpenStreetMap · Forecast: Open-Meteo · Routes: OSRM</span>
             </footer>
         </div>
     );

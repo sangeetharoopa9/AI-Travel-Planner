@@ -218,34 +218,3 @@
     margin-left: 10px;
   }
 }
-
-.desktop-sidebar-toggle {
-  position: absolute;
-  right: 24px;
-  display: grid;
-  width: 37px;
-  height: 37px;
-  place-items: center;
-  color: #68736b;
-  background: #fff;
-  border: 1px solid #e9ece8;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
-}
-
-.desktop-sidebar-toggle:hover,
-.mobile-menu-button:hover {
-  color: var(--primary-dark);
-  background: #eef5ef;
-}
-
-.mobile-menu-button {
-  cursor: pointer;
-}
-
-@media (max-width: 760px) {
-  .desktop-sidebar-toggle {
-    display: none;
-  }
-}
