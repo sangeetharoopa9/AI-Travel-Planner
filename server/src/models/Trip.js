@@ -30,11 +30,6 @@ const selectedHotelSchema = new mongoose.Schema(
             ref: "CatalogItem",
             default: null,
         },
-        placeId: {
-            type: String,
-            default: "",
-            maxlength: 200,
-        },
         name: {
             type: String,
             required: true,
@@ -72,11 +67,6 @@ const selectedHotelSchema = new mongoose.Schema(
             maxlength: 300,
         },
         website: {
-            type: String,
-            default: "",
-            maxlength: 2000,
-        },
-        mapsUri: {
             type: String,
             default: "",
             maxlength: 2000,
