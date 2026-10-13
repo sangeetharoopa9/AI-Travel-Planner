@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 import Trip from "../models/Trip.js";
 import CatalogItem from "../models/CatalogItem.js";
@@ -152,40 +153,100 @@ export async function createTrip(req, res, next) {
 
         let selectedHotel = null;
 
-        // OpenStreetMap results are community-sourced listings; save only the selected
-        // listing snapshot and its OSM identifier. No price, rating, or availability is invented.
-        if (submittedHotel && typeof submittedHotel === "object") {
+        // Support hotel listings returned by Geoapify and OpenStreetMap.
+        if (
+            submittedHotel &&
+            typeof submittedHotel === "object" &&
+            !Array.isArray(submittedHotel)
+        ) {
             const placeId = String(submittedHotel.placeId || "").trim();
             const hotelName = String(submittedHotel.name || "").trim();
-            if (!/^osm-(node|way|relation)-\d+$/.test(placeId) || !hotelName || hotelName.length > 150) {
+            const source = String(submittedHotel.source || "")
+                .trim()
+                .toLowerCase();
+
+            const isOsmId =
+                /^osm-(node|way|relation)-\d+$/.test(placeId);
+
+            const isGeoapifyId =
+                source === "geoapify" &&
+                /^[a-zA-Z0-9_-]{10,200}$/.test(placeId);
+
+            if (
+                (!isOsmId && !isGeoapifyId) ||
+                !hotelName ||
+                hotelName.length > 150
+            ) {
                 return res.status(400).json({
                     success: false,
                     message: "The selected hotel is invalid. Please choose it again.",
                 });
             }
+
+            const latitude = Number(submittedHotel.latitude);
+            const longitude = Number(submittedHotel.longitude);
+
             selectedHotel = {
                 catalogId: null,
                 placeId: placeId.slice(0, 200),
                 name: hotelName.slice(0, 150),
-                city: String(submittedHotel.city || cleanCity || destination).slice(0, 100),
-                country: String(submittedHotel.country || cleanCountry || "").slice(0, 100),
-                pricePerNight: 0,
-                rating: 0,
+                city: String(
+                    submittedHotel.city || cleanCity || destination
+                ).slice(0, 100),
+                country: String(
+                    submittedHotel.country || cleanCountry || ""
+                ).slice(0, 100),
+                pricePerNight: Number.isFinite(Number(submittedHotel.price)) &&
+                    Number(submittedHotel.price) > 0
+                    ? Number(submittedHotel.price)
+                    : 0,
+                rating: Number.isFinite(Number(submittedHotel.rating)) &&
+                    Number(submittedHotel.rating) >= 0
+                    ? Number(submittedHotel.rating)
+                    : 0,
                 image: String(submittedHotel.image || "").slice(0, 2000),
                 address: String(submittedHotel.address || "").slice(0, 300),
                 website: String(submittedHotel.website || "").slice(0, 2000),
                 mapsUri: String(submittedHotel.mapsUri || "").slice(0, 2000),
-                amenities: [],
+                amenities: Array.isArray(submittedHotel.amenities)
+                    ? submittedHotel.amenities
+                        .filter((item) => typeof item === "string")
+                        .slice(0, 30)
+                        .map((item) => item.slice(0, 100))
+                    : [],
+                ...(Number.isFinite(latitude) &&
+                latitude >= -90 &&
+                latitude <= 90
+                    ? { latitude }
+                    : {}),
+                ...(Number.isFinite(longitude) &&
+                longitude >= -180 &&
+                longitude <= 180
+                    ? { longitude }
+                    : {}),
             };
         } else if (hotelId) {
-            // Backward compatibility for trips created using catalog hotel records.
+            // Backward compatibility for hotels stored in the catalog.
             if (!mongoose.isValidObjectId(hotelId)) {
-                return res.status(400).json({ success: false, message: "The selected hotel is invalid. Please choose it again." });
+                return res.status(400).json({
+                    success: false,
+                    message: "The selected hotel is invalid. Please choose it again.",
+                });
             }
-            const hotelRecord = await CatalogItem.findOne({ _id: hotelId, type: "hotel", isActive: true }).lean();
+
+            const hotelRecord = await CatalogItem.findOne({
+                _id: hotelId,
+                type: "hotel",
+                isActive: true,
+            }).lean();
+
             if (!hotelRecord) {
-                return res.status(400).json({ success: false, message: "The selected hotel is no longer available. Please choose another hotel." });
+                return res.status(400).json({
+                    success: false,
+                    message: "The selected hotel is no longer available. Please choose another hotel.",
+                });
             }
+
             selectedHotel = {
                 catalogId: hotelRecord._id,
                 name: hotelRecord.name,
@@ -197,7 +258,9 @@ export async function createTrip(req, res, next) {
                 address: hotelRecord.address || "",
                 website: hotelRecord.website || "",
                 mapsUri: hotelRecord.mapsUri || "",
-                amenities: Array.isArray(hotelRecord.amenities) ? hotelRecord.amenities : [],
+                amenities: Array.isArray(hotelRecord.amenities)
+                    ? hotelRecord.amenities
+                    : [],
             };
         }
 
@@ -222,7 +285,9 @@ export async function createTrip(req, res, next) {
             duration,
             travelers: parsedTravelers,
             budget: parsedBudget,
-            currency: ["INR", "USD", "EUR", "GBP"].includes(currency) ? currency : "INR",
+            currency: ["INR", "USD", "EUR", "GBP"].includes(currency)
+                ? currency
+                : "INR",
             travelStyle: style,
             interests: cleanInterests,
         };
