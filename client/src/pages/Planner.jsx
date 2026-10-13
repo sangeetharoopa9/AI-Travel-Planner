@@ -16,6 +16,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import api from "../services/api";
+import { formatCurrency, getPreferredCurrency } from "../utils/currency";
 import "./Planner.css";
 
 const TRAVEL_STYLES = [
@@ -66,11 +67,7 @@ function formatDate(dateString) {
 }
 
 function formatMoney(value) {
-    return new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-        maximumFractionDigits: 0,
-    }).format(Number(value) || 0);
+    return formatCurrency(value);
 }
 
 export default function Planner() {
@@ -245,6 +242,7 @@ export default function Planner() {
                 endDate: form.endDate,
                 travelers: Number(form.travelers),
                 budget: Number(form.budget),
+                currency: getPreferredCurrency(),
                 travelStyle: form.travelStyle,
                 interests: form.interests,
                 destinationCity: selectedDestination.city || "",
@@ -443,7 +441,7 @@ export default function Planner() {
 
                         <div className="planner-field">
                             <label htmlFor="trip-budget">
-                                Total budget (INR)
+                                Total budget ({getPreferredCurrency()})
                             </label>
 
                             <div className="planner-input-with-icon">
